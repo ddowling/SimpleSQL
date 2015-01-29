@@ -1,0 +1,52 @@
+statement ::= 'select' select_columns 'from' table_name opt_where opt_sort_by
+	|     'delete' 'from' table_name opt_where
+
+opt_where ::= <empty>
+	|     'where' expression
+
+opt_sort_by ::= <empty>
+	|     ?
+
+expression ::= expression '=' expression
+	|      expression '=' 'any' expression_list
+	|      expression '!=' expression
+	|      expression '<' expression
+	|      expression '>' expression
+	|      expression '<=' expression
+	|      expression '>=' expression
+	|      expression 'and' expression
+	|      expression 'or' expression
+        |      expression 'in' expression_list
+        |      expression 'not' 'in' expression_list
+        |      expression 'between' expression 'and' expression
+        |      expression 'not' 'between' expression 'and' expression
+	|      expression 'like' string
+	|      expression 'not' 'like' string
+	|      expression 'is' 'null'
+	|      expression 'is' 'not' 'null'
+	|      expression '+' expression
+	|      expression '-' expression
+	|      expression '*' expression
+	|      expression '/' expression
+	|      'not' expression
+	|      '(' expression ')'
+	|      variable
+	|      value
+	|      function expression_list
+	|      class '.' method expression_list
+
+expression_list ::= '(' expressions ')'
+
+expressions ::= expressions ',' expression
+	|      expression
+
+
+expression can return the following types:
+	Name		C++ Type
+	----------------------------
+	integer		int
+	real		double
+	string		std::string
+	date		wxDateTime
+	bool		bool
+

@@ -1,0 +1,118 @@
+%{
+/*
+ * Copyright   : (c) 2010 by Open Source Solutions Pty Ltd.  All Rights Reserved
+ * Project     : Core Libraries
+ * File        : SQLParse_lex.lpp
+ *
+ * Author      : Denis Dowling
+ * Created     : 1/12/2010
+ *
+ * Description : Lexer for the SQL Parser
+ */
+
+#define yylval SimpleSQL_lval
+#undef YY_DECL
+#define YY_DECL int SimpleSQL_lex()
+
+#include "SQLParse.h"
+#include "SQLExpression.h"
+#include "SQLParse_yacc.hpp"
+
+static bool between_context = false;
+
+#define YY_SKIP_YYWRAP
+static int
+yywrap(void)
+{
+    return 1;
+}
+
+%}
+%option nounput
+%option never-interactive
+
+%%
+
+"and"		{
+    // We need to switch the and statement if we are in a between context or
+    // not to remove some reduce/reduce errors. Thanks Greg for the idea.
+    if (between_context)
+    {
+	between_context = false;
+	return(BETWEEN_AND_T);
+    }
+    else
+	return(AND_T);
+}
+"between"	{
+    between_context = true;
+    return(BETWEEN_T);
+}
+
+"or"		return(OR_T);
+"not"           return(NOT_T);
+"<="		return(LE_T);
+">="		return(GE_T);
+"="		return(EQ_T);
+"!="		return(NE_T);
+"any"		return(ANY_T);
+
+"escape"	return(ESCAPE_T);
+"like"		return(LIKE_T);
+"in"            return(IN_T);
+"is"            return(IS_T);
+"null"		return(NULL_T);
+
+-?[0-9]+	{
+    yylval.expression =
+	new SQLValueExpression(new SQLIntegerValue(atoi((char *)yytext)));
+    return(INT_T);
+}
+
+-?[0-9]+\.[0-9]* {
+    yylval.expression =
+	new SQLValueExpression(new SQLRealValue(atof((char *)yytext)));
+    return(REAL_T);
+}
+
+"TRUE"		{
+    yylval.expression =
+	new SQLValueExpression(new SQLBooleanValue(1));
+    return(BOOL_T);
+}
+
+"FALSE"		{
+    yylval.expression =	new SQLValueExpression(new SQLBooleanValue(0));
+    return(BOOL_T);
+}
+
+\'[^']*\' {
+    /* Can put ' in string by prefixing with
+     * a \ ie \'.
+     */
+    if (yytext[yyleng-1] == '\\')
+    {
+	 yymore();
+    }
+    else
+    {
+	yytext[yyleng-1] = '\0';
+	yylval.string = new char[yyleng];
+	strcpy(yylval.string, (char *)(yytext + 1));
+	return(STRING_T);
+    }
+}
+
+[A-Za-z_][A-Za-z_0-9-]*	{
+    yylval.string = new char[yyleng + 1];
+    strcpy(yylval.string, (char *)yytext);
+    return(IDENT_T);
+}
+
+[ \t\n]+		/* Skip whitespace */	;
+
+.		{ 	/* unmatched character */
+    return yytext[0];
+}
+
+%%
