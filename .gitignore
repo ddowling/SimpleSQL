@@ -7,3 +7,4 @@ SQLParse_yacc.cpp
 SQLParse_yacc.hpp
 libSimpleSQL.a
 SQLParse_lex.cpp
+Testing

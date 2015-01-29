@@ -47,6 +47,6 @@ expression can return the following types:
 	integer		int
 	real		double
 	string		std::string
-	date		wxDateTime
+	date		time_t
 	bool		bool
 
