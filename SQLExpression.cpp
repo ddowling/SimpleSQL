@@ -26,7 +26,7 @@ SQLExpression::~SQLExpression()
     assert(refCount == 0);
 }
 
-std::string SQLExpression::isA() const
+const char * SQLExpression::isA() const
 {
     return "SQLExpression";
 }
@@ -34,7 +34,7 @@ std::string SQLExpression::isA() const
 std::string SQLExpression::shortName() const
 {
     // Get the full name
-    std::string s = isA();
+    std::string s(isA());
 
     // Strip off the SQL leader and Expression trailer
     size_t length = s.length();
@@ -45,22 +45,8 @@ std::string SQLExpression::shortName() const
     assert(s.substr(length - trailer.length(), trailer.length()) == trailer);
     assert(length >= trailer.length() + leader.length());
 
-    s = s.substr(leader.length(), length - trailer.length() - leader.length());
-
-    return s;
-}
-
-void SQLExpression::getRef()
-{
-    refCount++;
-}
-
-void SQLExpression::releaseRef()
-{
-    refCount--;
-
-    if (refCount <= 0)
-	delete this;
+    return s.substr(leader.length(),
+                    length - trailer.length() - leader.length());
 }
 
 // SQLExpressionList definition
@@ -149,7 +135,7 @@ std::string SQLUnaryExpression::asString() const
     return shortName() + "(" + expr->asString() + ")";
 }
 
-std::string SQLUnaryExpression::isA() const
+const char * SQLUnaryExpression::isA() const
 {
     return "SQLUnaryExpression";
 }
@@ -175,7 +161,7 @@ std::string SQLBinaryExpression::asString() const
 	expr2->asString() + ")";
 }
 
-std::string SQLBinaryExpression::isA() const
+const char * SQLBinaryExpression::isA() const
 {
     return "SQLBinaryExpression";
 }
@@ -212,7 +198,7 @@ std::string SQLTerminalExpression::asString() const
     return shortName();
 }
 
-std::string SQLTerminalExpression::isA() const
+const char * SQLTerminalExpression::isA() const
 {
     return "SQLTerminalExpression";
 }
@@ -230,7 +216,7 @@ SQLValue SQLEqualsExpression::evaluate(SQLContext &context)
     return res ? SQLTrueValue : SQLFalseValue;
 }
 
-std::string SQLEqualsExpression::isA() const
+const char * SQLEqualsExpression::isA() const
 {
     return "SQLEqualsExpression";
 }
@@ -247,7 +233,7 @@ SQLValue SQLNotEqualsExpression::evaluate(SQLContext &context)
     return res ? SQLTrueValue : SQLFalseValue;
 }
 
-std::string SQLNotEqualsExpression::isA() const
+const char * SQLNotEqualsExpression::isA() const
 {
     return "SQLNotEqualsExpression";
 }
@@ -263,7 +249,7 @@ SQLValue SQLLessThanExpression::evaluate(SQLContext &context)
     return res ? SQLTrueValue : SQLFalseValue;
 }
 
-std::string SQLLessThanExpression::isA() const
+const char * SQLLessThanExpression::isA() const
 {
     return "SQLLessThanExpression";
 }
@@ -279,7 +265,7 @@ SQLValue SQLGreaterThanExpression::evaluate(SQLContext &context)
     return res ? SQLTrueValue : SQLFalseValue;
 }
 
-std::string SQLGreaterThanExpression::isA() const
+const char * SQLGreaterThanExpression::isA() const
 {
     return "SQLGreaterThanExpression";
 }
@@ -295,7 +281,7 @@ SQLValue SQLLessEqualsExpression::evaluate(SQLContext &context)
     return res ? SQLTrueValue : SQLFalseValue;
 }
 
-std::string SQLLessEqualsExpression::isA() const
+const char * SQLLessEqualsExpression::isA() const
 {
     return "SQLLessEqualsExpression";
 }
@@ -311,7 +297,7 @@ SQLValue SQLGreaterEqualsExpression::evaluate(SQLContext &context)
     return res ? SQLTrueValue : SQLFalseValue;
 }
 
-std::string SQLGreaterEqualsExpression::isA() const
+const char * SQLGreaterEqualsExpression::isA() const
 {
     return "SQLGreaterEqualsExpression";
 }
@@ -330,7 +316,7 @@ SQLValue SQLAndExpression::evaluate(SQLContext &context)
     return expr2->evaluate(context);
 }
 
-std::string SQLAndExpression::isA() const
+const char * SQLAndExpression::isA() const
 {
     return "SQLAndExpression";
 }
@@ -349,7 +335,7 @@ SQLValue SQLOrExpression::evaluate(SQLContext &context)
     return expr2->evaluate(context);
 }
 
-std::string SQLOrExpression::isA() const
+const char * SQLOrExpression::isA() const
 {
     return "SQLOrExpression";
 }
@@ -363,7 +349,7 @@ SQLValue SQLOperationExpression::evaluate(SQLContext &context)
     return v1.binaryOperation(v2, op);
 }
 
-std::string SQLOperationExpression::isA() const
+const char * SQLOperationExpression::isA() const
 {
     return "SQLOperationExpression";
 }
@@ -385,7 +371,7 @@ SQLValue SQLNotExpression::evaluate(SQLContext &context)
     return v.asBoolean() ? SQLFalseValue : SQLTrueValue;
 }
 
-std::string SQLNotExpression::isA() const
+const char * SQLNotExpression::isA() const
 {
     return "SQLNotExpression";
 }
@@ -397,7 +383,7 @@ SQLValue SQLNegateExpression::evaluate(SQLContext &context)
     return v.unaryOperation('-');
 }
 
-std::string SQLNegateExpression::isA() const
+const char * SQLNegateExpression::isA() const
 {
     return "SQLNegateExpression";
 }
@@ -450,19 +436,20 @@ std::string SQLInExpression::asString() const
 	list->asString() + ")";
 }
 
-std::string SQLInExpression::isA() const
+const char * SQLInExpression::isA() const
 {
     return "SQLInExpression";
 }
 
-SQLLikeExpression::SQLLikeExpression(SQLExpression *expr, std::string pattern,
-				     std::string escape)
+SQLLikeExpression::SQLLikeExpression(SQLExpression *expr,
+                                     const std::string &pattern,
+				     const std::string &escape)
 : SQLUnaryExpression(expr)
 {
     std::string regexp_str;
     char escape_char = '\0';
     if (escape.length() > 0)
-	escape_char = escape[0U];
+	escape_char = escape[0];
 
     size_t pos;
     for(pos = 0; pos < pattern.length(); pos++)
@@ -516,13 +503,13 @@ std::string SQLLikeExpression::asString() const
     return shortName() + "(" + expr->asString() + ", <regexp>)";
 }
 
-std::string SQLLikeExpression::isA() const
+const char * SQLLikeExpression::isA() const
 {
     return "SQLLikeExpression";
 }
 
-SQLFunctionExpression::SQLFunctionExpression(std::string class_name,
-					     std::string member_name,
+SQLFunctionExpression::SQLFunctionExpression(const std::string &class_name,
+					     const std::string &member_name,
 					     SQLExpressionList *list_)
 : className(class_name), memberName(member_name), list(list_)
 {
@@ -574,7 +561,7 @@ std::string SQLFunctionExpression::asString() const
     return shortName() + "(" + name + ", " + list->asString() + ")";
 }
 
-std::string SQLFunctionExpression::isA() const
+const char * SQLFunctionExpression::isA() const
 {
     return "SQLFunctionExpression";
 }
@@ -589,7 +576,7 @@ SQLValue SQLNullExpression::evaluate(SQLContext &context)
     return v.isVoid() ? SQLTrueValue : SQLFalseValue;
 }
 
-std::string SQLNullExpression::isA() const
+const char * SQLNullExpression::isA() const
 {
     return "SQLNullExpression";
 }
@@ -599,7 +586,7 @@ SQLValue SQLVariableExpression::evaluate(SQLContext &context)
     return context.variableLookup(className, memberName);
 }
 
-std::string SQLVariableExpression::isA() const
+const char * SQLVariableExpression::isA() const
 {
     return "SQLVariableExpression";
 }
@@ -622,7 +609,7 @@ SQLValue SQLValueExpression::evaluate(SQLContext &)
     return value;
 }
 
-std::string SQLValueExpression::isA() const
+const char * SQLValueExpression::isA() const
 {
     return "SQLValueExpression";
 }

@@ -52,7 +52,7 @@ run_expression(string s, double v2)
 
 	for (int i = 0; i < parser.numErrors(); i++)
 	{
-	    SQLParseError *e = parser.errorNumber(i);
+	    const SQLParseError *e = parser.errorNumber(i);
 
 	    cout << e->code() << endl;
 	}

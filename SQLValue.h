@@ -12,6 +12,7 @@
 #define SQLVALUE_H
 
 #include <string>
+#include <assert.h>
 
 #define SQL_DATE_SUPPORT 1
 
@@ -21,6 +22,56 @@
 
 class SQLValueRep;
 class SQLVoidValue;
+
+/**
+ * Implementation of the SQL variable types
+ */
+class SQLValueRep
+{
+friend class SQLValue;
+public:
+    SQLValueRep();
+    virtual ~SQLValueRep();
+
+    /** Sets the variable from the given string. */
+    virtual bool fromString(std::string s) = 0;
+
+    /** Extracts the variable into a string. */
+    virtual void toString(std::string &s) = 0;
+
+    /** Return the type as a printable string. */
+    virtual std::string typeAsString() const = 0;
+
+    /** clone the current object and return a pointer to the new instance */
+    virtual SQLValueRep *clone() const = 0;
+
+    /** Return TRUE if the objects are the same type. */
+    bool isSameType(SQLValueRep *rep) const;
+
+    /**
+     * Compare this with argument and return
+     *      -1 if this < v
+     *      0 if this == v
+     *      1 if this > v
+     */
+    virtual int compare(SQLValueRep *rep) const = 0;
+
+    /** Perform the given arithmetic operation and return the result */
+    virtual SQLValueRep *binaryOperation(SQLValueRep *v2, char op) = 0;
+    virtual SQLValueRep *unaryOperation(char op) = 0;
+
+protected:
+    SQLValueRep *illegalOperation(char op);
+
+private:
+    /**
+     * Return a unique number for the object type. This allows
+     * quick type comparison.
+     */
+    virtual void *typeUniqueTag() const = 0;
+
+    int refCount_;
+};
 
 /**
  * Represent the different SQL value types.
@@ -78,61 +129,23 @@ public:
     SQLValue unaryOperation(char op);
 
 private:
-    void setRep(SQLValueRep *rep);
-    void clearRep();
-
     SQLValueRep *rep_;
     static SQLVoidValue *void_rep_;
-};
 
-/**
- * Implementation of the SQL variable types
- */
-class SQLValueRep
-{
-friend class SQLValue;
-public:
-    SQLValueRep();
-    virtual ~SQLValueRep();
+    void setRep(SQLValueRep *rep)
+    {
+        rep_ = rep;
 
-    /** Sets the variable from the given string. */
-    virtual bool fromString(std::string s) = 0;
+        rep_->refCount_++;
+    }
 
-    /** Extracts the variable into a string. */
-    virtual void toString(std::string &s) = 0;
+    void clearRep()
+    {
+        assert(rep_->refCount_ > 0);
 
-    /** Return the type as a printable string. */
-    virtual std::string typeAsString() const = 0;
-
-    /** clone the current object and return a pointer to the new instance */
-    virtual SQLValueRep *clone() const = 0;
-
-    /** Return TRUE if the objects are the same type. */
-    bool isSameType(SQLValueRep *rep) const;
-
-    /**
-     * Compare this with argument and return
-     *      -1 if this < v
-     *      0 if this == v
-     *      1 if this > v
-     */
-    virtual int compare(SQLValueRep *rep) const = 0;
-
-    /** Perform the given arithmetic operation and return the result */
-    virtual SQLValueRep *binaryOperation(SQLValueRep *v2, char op) = 0;
-    virtual SQLValueRep *unaryOperation(char op) = 0;
-
-protected:
-    SQLValueRep *illegalOperation(char op);
-
-private:
-    /**
-     * Return a unique number for the object type. This allows
-     * quick type comparison.
-     */
-    virtual void *typeUniqueTag() const = 0;
-
-    int refCount_;
+        if (--rep_->refCount_ == 0)
+            delete rep_;
+    }
 };
 
 /**

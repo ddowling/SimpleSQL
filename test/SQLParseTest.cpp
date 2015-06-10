@@ -19,21 +19,22 @@ using namespace std;
 void
 t(string str, string match, bool err = false)
 {
-    SQLParse parser;
+    cout << "Parsing : " << str << endl;
 
+    SQLParse parser;
     bool res = parser.parse(str);
 
-    if (!res)
+    if (parser.numErrors() > 0)
     {
-	cout << str << endl;
 	cout << "Got the following errors:" << endl;
-
-	for(int i = 0; i < parser.numErrors(); i++)
-	{
-	    SQLParseError *err = parser.errorNumber(i);
-	    cout << "Error : " << err->code()
-		 << " Index of " << err->index() << endl;
-	}
+        int col = parser.errorNumber(0)->column();
+        if (col < 1)
+            col = 1;
+        std::string tag(col-1, '-');
+        tag += '^';
+	cout << str << endl;
+        cout << tag << endl;
+        cout << parser.errorString() << endl;
     }
 
     SQLExpression *e = parser.expression();
@@ -44,26 +45,23 @@ t(string str, string match, bool err = false)
     {
 	assert(res);
 
-	if (!match.empty())
-	{
-	    assert(e != 0);
+        if (!str.empty())
+        {
+            assert(e != 0);
 
-	    if (e->asString() != match)
-	    {
-		cout << "Should be     : " << match << endl;
-		cout << endl;
-
-		assert(e->asString() == match);
-	    }
-	}
-	else
-	{
-	    // Null expression if empty string.
-	    assert(e == 0);
-	}
+            if (e->asString() != match)
+            {
+                cout << "Should be     : " << match << endl;
+                cout << endl;
+            
+                assert(e->asString() == match);
+            }
+        }
     }
     else
+    {
 	assert(!res);
+    }
 }
 
 int main()
@@ -78,14 +76,18 @@ int main()
     t("(c)", "c");
 
     t("a = b", "Equals(a, b)");
+    t("a == b", "Equals(a, b)");
     t("a != b", "NotEquals(a, b)");
     t("a < b", "LessThan(a, b)");
     t("a > b", "GreaterThan(a, b)");
     t("a <= b", "LessEquals(a, b)");
     t("a >= b", "GreaterEquals(a, b)");
     t("a and b", "And(a, b)");
+    t("a && b", "And(a, b)");
     t("a or b", "Or(a, b)");
+    t("a || b", "Or(a, b)");
     t("not a", "Not(a)");
+    t("!a", "Not(a)");
     t("a + b", "Operation(a + b)");
     t("a - b", "Operation(a - b)");
     t("a * b", "Operation(a * b)");
@@ -126,6 +128,32 @@ int main()
     t("a not between b and c",
       "Or(LessThan(a, b), GreaterThan(a, c))");
 
+    // Booleans
+    t("true", "True");
+    t("false", "False");
+    t("TRUE", "True");
+    t("FALSE", "False");
+    t("xx == false", "Equals(xx, False)");
+
+    // Integers
+    t("0", "0");
+    t("1234", "1234");
+    t("-4321", "-4321");
+
+    // Doubles
+    t("3.14159", "3.14159");
+    t("-47.539", "-47.539");
+
+    // Strings
+    t("'string 1'", "string 1");
+    t("\"Double quoted string\"", "Double quoted string");
+    t("'don\\'t'", "don't");
+    t("\"Will also escape this \\\"word\\\".\"",
+      "Will also escape this \"word\".");
+    t("''", "");
+    t("\"\"", "");
+    t("'\\n\\t\\r'", "\n\t\r");
+
     // Now add some syntax errors
     t("a b", "", true);
     t("( b c )", "", true);
@@ -136,5 +164,7 @@ int main()
     t("a < > b", "", true);
     t("a != 'fred", "", true);
     t("a = 'xxx", "", true);
+
+    cout << "All done" << endl;
     return 0;
 }

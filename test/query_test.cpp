@@ -181,7 +181,8 @@ int main()
     run_query("crews not in ('1', '3', '4', '5')", 6);
     run_query("crews in (4, 5)", 2);
     run_query("crews not in (4, 5)", 8);
-    run_query("crews like '\\[1-3]' escape '\\'", 3);
+    // The escape here turns the expression into a regular expression
+    run_query("crews like 'X[1-3]' escape 'X'", 3);
     run_query("crews != 3 and crews != 4", 8);
     run_query("crews = 5 or crews = 7", 2);
     run_query("crews < 5", 4);

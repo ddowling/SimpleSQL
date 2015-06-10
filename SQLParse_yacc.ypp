@@ -64,6 +64,8 @@ void SimpleSQL_error(const char *err);
     char *string;
 }
 
+%locations
+
 %token <expression>	INT_T REAL_T BOOL_T
 %token <string>		STRING_T IDENT_T
 
@@ -255,7 +257,9 @@ expression	: expression IN_T expression_list
                 | expression error expression
 		        {
                             SQLParse::current_parser_->
-                                addError("missing operator");
+                                addError("missing operator",
+                                         @2.first_line,
+                                         @2.first_column);
 
 			    // Through away one argument.
 			    $3->getRef();
@@ -266,12 +270,16 @@ expression	: expression IN_T expression_list
                 | expression operator error
 		        {
                             SQLParse::current_parser_->
-                                addError("missing expression");
+                                addError("missing expression",
+                                         @3.first_line,
+                                         @3.first_column);
 			    $$ = $1;
                         }
                 | '(' expression error
 		        {
-                            SQLParse::current_parser_->addError("missing ')'");
+                            SQLParse::current_parser_->addError("missing ')'",
+                                                                @3.first_line,
+                                                                @3.first_column);
 			    $$ = $2;
 			}
 		;
@@ -311,5 +319,7 @@ extern int yylex();
 void
 yyerror(const char *err)
 {
-    SQLParse::current_parser_->addError(err);
+    SQLParse::current_parser_->addError(err,
+                                        yylloc.first_line,
+                                        yylloc.first_column);
 }

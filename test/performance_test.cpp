@@ -142,7 +142,7 @@ int run_query(string s)
 	cerr << "Could not parse the query '" << s << "' : " << endl;
 	for (int i = 0; i < parser.numErrors(); i++)
 	{
-	    SQLParseError *e = parser.errorNumber(i);
+	    const SQLParseError *e = parser.errorNumber(i);
 
 	    cout << e->code() << endl;
 	}

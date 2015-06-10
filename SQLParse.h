@@ -24,16 +24,22 @@ class SQLParseError
 public:
     SQLParseError();
 
-    /** Return the offset in the parse string of the error */
-    int index() const;
-    void index(int i);
+    /** Return the line and column of the error.
+     * By convention lines and columns are numbered starting from 1.
+     */
+    int line() const;
+    void line(int l);
+
+    int column() const;
+    void column(int c);
 
     /** Error code string */
-    std::string code() const;
-    void code(std::string c);
+    const std::string &code() const;
+    void code(const std::string &c);
 private:
-    int index_;
     std::string code_;
+    int line_;
+    int column_;
 };
 
 
@@ -46,26 +52,25 @@ public:
     SQLParse();
     ~SQLParse();
 
-    bool parse(std::string str);
+    bool parse(const std::string &str);
 
     SQLExpression *expression() const;
     void clearExpression();
 
     int numErrors() const;
-    SQLParseError *errorNumber(int i);
+    const SQLParseError *errorNumber(int i) const;
 
     /** Return all of the error codes as a string */
-    std::string errorString();
+    std::string errorString() const;
 
 private:
     std::string parse_string_;
-    size_t index_;
 
     SQLExpression *expression_;
 
 
     /** Support routines for yacc */
-    void addError(std::string err);
+    void addError(const std::string &err, int line, int column);
     static SQLParse *current_parser_;
     void setExpression(SQLExpression *e);
 

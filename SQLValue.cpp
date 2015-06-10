@@ -9,9 +9,14 @@
  * Description : Variant value class for SQL values
  */
 #include "SQLValue.h"
-#include <assert.h>
 #include <string.h>
 #include <sstream>
+
+#define USE_BOOST 0
+
+#if USE_BOOST
+#include <boost/lexical_cast.hpp>
+#endif
 
 #if DEBUG_TIME
 #include <stdio.h>
@@ -44,22 +49,6 @@ SQLValue::SQLValue(SQLValueRep *rep)
 SQLValue::~SQLValue()
 {
     clearRep();
-}
-
-void SQLValue::
-setRep(SQLValueRep *rep)
-{
-    rep_ = rep;
-
-    rep_->refCount_++;
-}
-
-void SQLValue::clearRep()
-{
-    assert(rep_->refCount_ > 0);
-
-    if (--rep_->refCount_ == 0)
-	delete rep_;
 }
 
 const SQLValue & SQLValue::operator=(const SQLValue &v)
@@ -461,10 +450,14 @@ bool SQLIntegerValue::fromString(std::string s)
 
 void SQLIntegerValue::toString(std::string &s)
 {
+#if USE_BOOST
+    s = boost::lexical_cast<std::string>(value);
+#else
     std::stringstream ss;
     ss << value;
 
     s = ss.str();
+#endif
 }
 
 std::string SQLIntegerValue::typeAsString() const
@@ -570,10 +563,16 @@ bool SQLRealValue::fromString(std::string s)
 
 void SQLRealValue::toString(std::string &s)
 {
+    // Standard C++11 could just do the following
+    // s = std::to_string(value);
+#if USE_BOOST
+    s = boost::lexical_cast<std::string>(value);
+#else
     std::stringstream ss;
     ss << value;
 
     s = ss.str();
+#endif
 }
 
 std::string SQLRealValue::typeAsString() const

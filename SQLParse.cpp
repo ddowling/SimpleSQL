@@ -23,28 +23,37 @@ extern int SimpleSQL_parse();
 
 // Error Handling class
 SQLParseError::SQLParseError()
-: index_(0)
+ : line_(0), column_(0)
 {
 }
 
-// Return the offset in the parse string of the error
-int SQLParseError::index() const
+int SQLParseError::line() const
 {
-    return index_;
+    return line_;
 }
 
-void SQLParseError::index(int i)
+void SQLParseError::line(int l)
 {
-    index_ = i;
+    line_ = l;
+}
+
+int SQLParseError::column() const
+{
+    return column_;
+}
+
+void SQLParseError::column(int c)
+{
+    column_ = c;
 }
 
 // Error code string
-std::string SQLParseError::code() const
+const std::string & SQLParseError::code() const
 {
     return code_;
 }
 
-void SQLParseError::code(std::string c)
+void SQLParseError::code(const std::string &c)
 {
     code_ = c;
 }
@@ -59,10 +68,9 @@ SQLParse::~SQLParse()
     setExpression(0);
 }
 
-bool SQLParse::parse(std::string str)
+bool SQLParse::parse(const std::string &str)
 {
     parse_string_ = str;
-    index_ = 0;
 
     setExpression(0);
 
@@ -86,13 +94,17 @@ void SQLParse::clearExpression()
 
 SQLParse * SQLParse::current_parser_ = 0;
 
-void SQLParse::addError(std::string err)
+void SQLParse::addError(const std::string &err, int line, int column)
 {
     SQLParseError *e = currentError();
 
     // Yacc seems to generate \'syntax error\' even when we trap normal errors
     if (e != 0 && e->code() == "syntax error")
+    {
 	e->code(err);
+	e->line(line);
+	e->column(column);
+    }
     else
     {
 	e = newError();
@@ -101,8 +113,9 @@ void SQLParse::addError(std::string err)
 	if (e == 0)
 	    return;
 
-	e->index(index_ - 1);
 	e->code(err);
+	e->line(line);
+	e->column(column);
     }
 }
 
@@ -122,7 +135,7 @@ SQLParseError * SQLParse::newError()
     return &(errors_[num_errors_++]);
 }
 
-SQLParseError * SQLParse::errorNumber(int i)
+const SQLParseError * SQLParse::errorNumber(int i) const
 {
     if (i >= num_errors_ || i < 0)
 	return 0;
@@ -141,15 +154,18 @@ int SQLParse::numErrors() const
 }
 
 // Return all of the error codes as a string
-std::string SQLParse::errorString()
+std::string SQLParse::errorString() const
 {
     std::stringstream s;
 
     for(int i = 0; i < num_errors_; i++)
     {
-	SQLParseError *err = errorNumber(i);
+	const SQLParseError *err = errorNumber(i);
 
-	s << err->code() << " at offset " << err->index() << "\n";
+	s << err->code();
+        if (err->line() > 0)
+            s << " at " << err->line() << ":" << err->column();
+        s << "\n";
     }
 
     return s.str();

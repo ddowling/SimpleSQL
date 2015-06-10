@@ -21,15 +21,64 @@
 static bool between_context = false;
 
 #define YY_SKIP_YYWRAP
-static int
-yywrap(void)
+static int yywrap(void)
 {
     return 1;
 }
 
+static void unescape_string()
+{
+    int i;
+    yylval.string = new char[yyleng];
+    int p = 0;
+    // Ignore first and last quote characters
+    for (i = 1; i < yyleng-1; i++)
+    {
+        char c = yytext[i];
+        if (c == '\\' && i < yyleng-2)
+        {
+            i++;
+            c = yytext[i];
+            if (c == 'n')
+                c = '\n';
+            else if (c == 'r')
+                c = '\r';
+            else if (c == 't')
+                c = '\t';
+            // Other characters just use the backslash to escape them
+        }
+        yylval.string[p++] = c;
+    }
+    yylval.string[p++] = '\0';
+}
+
+#define YY_USER_ACTION update_lloc();
+
+static void update_lloc()
+{
+    extern YYLTYPE SimpleSQL_lloc;
+
+    SimpleSQL_lloc.first_line = SimpleSQL_lloc.last_line;
+    SimpleSQL_lloc.first_column = SimpleSQL_lloc.last_column;
+
+    int i;
+    for(i = 0; yytext[i] != '\0'; i++)
+    {
+        if (yytext[i] == '\n')
+        {
+            SimpleSQL_lloc.last_line++;
+            SimpleSQL_lloc.last_column = 0;
+        }
+        else
+            SimpleSQL_lloc.last_column++;
+    }
+}
+
 %}
+
 %option nounput
 %option never-interactive
+%option yylineno
 
 %%
 
@@ -44,16 +93,21 @@ yywrap(void)
     else
 	return(AND_T);
 }
+
 "between"	{
     between_context = true;
     return(BETWEEN_T);
 }
 
+"&&"            return(AND_T);
 "or"		return(OR_T);
+"||"		return(OR_T);
 "not"           return(NOT_T);
+"!"             return(NOT_T);
 "<="		return(LE_T);
 ">="		return(GE_T);
 "="		return(EQ_T);
+"=="		return(EQ_T);
 "!="		return(NE_T);
 "any"		return(ANY_T);
 
@@ -75,30 +129,42 @@ yywrap(void)
     return(REAL_T);
 }
 
-"TRUE"		{
+"true"		{
     yylval.expression =
 	new SQLValueExpression(new SQLBooleanValue(1));
     return(BOOL_T);
 }
 
-"FALSE"		{
+"false"		{
     yylval.expression =	new SQLValueExpression(new SQLBooleanValue(0));
     return(BOOL_T);
 }
 
 \'[^']*\' {
-    /* Can put ' in string by prefixing with
-     * a \ ie \'.
-     */
-    if (yytext[yyleng-1] == '\\')
+    // Can put ' in string by prefixing with \ ie \'.
+    // FIXME Does not handle double backslash at end of line
+    if (yyleng >= 2 && yytext[yyleng-2] == '\\')
     {
-	 yymore();
+         yyless(yyleng-1); // Return last quote
+	 yymore(); // Append next string to this token
     }
     else
     {
-	yytext[yyleng-1] = '\0';
-	yylval.string = new char[yyleng];
-	strcpy(yylval.string, (char *)(yytext + 1));
+        unescape_string();
+	return(STRING_T);
+    }
+}
+
+\"[^"]*\" {
+    // Also support double quoted strings
+    if (yyleng >= 2 && yytext[yyleng-2] == '\\')
+    {
+         yyless(yyleng-1); // Return last quote
+	 yymore(); // Append next string to this token
+    }
+    else
+    {
+        unescape_string();
 	return(STRING_T);
     }
 }

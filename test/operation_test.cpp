@@ -47,7 +47,7 @@ void run_expression(string s, SQLValue expected_value)
 	cerr << "Could not parse the expression '" << s << "' : " << endl;
 	for (int i = 0; i < parser.numErrors(); i++)
 	{
-	    SQLParseError *e = parser.errorNumber(i);
+	    const SQLParseError *e = parser.errorNumber(i);
 
 	    cout << e->code() << endl;
 	}
