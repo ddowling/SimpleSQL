@@ -19,22 +19,22 @@ class TestContext
 : public SQLContext
 {
 public:
-    TestContext(string class_name, int value);
+    TestContext(const string &class_name, int value);
 
-    virtual SQLValue variableLookup(string class_name,
-				    string member_name) const;
+    virtual SQLValue variableLookup(const string &class_name,
+				    const string &member_name) const;
 private:
     string className;
     int value;
 };
 
-TestContext::TestContext(string class_name, int value_)
+TestContext::TestContext(const string &class_name, int value_)
 : className(class_name), value(value_)
 {
 }
 
-SQLValue TestContext::variableLookup(string class_name,
-				     string member_name) const
+SQLValue TestContext::variableLookup(const string &class_name,
+				     const string &member_name) const
 {
     if (class_name == className)
     {

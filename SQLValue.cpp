@@ -22,18 +22,18 @@
 #include <stdio.h>
 #endif
 
-SQLVoidValue * SQLValue::void_rep_ = 0;
+SQLVoidValue * SQLValue::voidRep_ = 0;
 
 SQLValue::SQLValue()
 {
-    if (void_rep_ == 0)
+    if (voidRep_ == 0)
     {
-	void_rep_ = new SQLVoidValue;
+	voidRep_ = new SQLVoidValue;
 	// Bump the reference count so it will not be destroyed.
-	void_rep_->refCount_++;
+	voidRep_->refCount_++;
     }
 
-    setRep(void_rep_);
+    setRep(voidRep_);
 }
 
 SQLValue::SQLValue(const SQLValue &v)
@@ -143,7 +143,7 @@ time_t SQLValue::asDateTime() const
 }
 #endif
 
-bool SQLValue::fromString(std::string str)
+bool SQLValue::fromString(const std::string &str)
 {
     return rep_->fromString(str);
 }
@@ -154,16 +154,9 @@ bool SQLValue::isSameType(const SQLValue &v) const
 }
 
 // Return true if the object is of void type
-bool SQLValue::isVoid()
+bool SQLValue::isVoid() const 
 {
-    if (void_rep_ == 0)
-    {
-	void_rep_ = new SQLVoidValue;
-	// Bump the reference count so it will not be destroyed.
-	void_rep_->refCount_++;
-    }
-
-    return rep_->isSameType(void_rep_);
+    return voidRep_ == 0 || rep_->isSameType(voidRep_);
 }
 
 // Return true if the object is of void type
@@ -246,7 +239,7 @@ bool SQLValueRep::isSameType(SQLValueRep *rep) const
     if (this == rep)
 	return true;
     else
-	return typeUniqueTag() == rep->typeUniqueTag();
+	return typeAsString() == rep->typeAsString();
 }
 
 SQLValueRep * SQLValueRep::illegalOperation(char op)
@@ -259,7 +252,7 @@ SQLValueRep * SQLValueRep::illegalOperation(char op)
 
 
 // Derived variable classes
-bool SQLVoidValue::fromString(std::string)
+bool SQLVoidValue::fromString(const std::string &)
 {
     return true;
 }
@@ -269,7 +262,7 @@ void SQLVoidValue::toString(std::string &s)
     s = "";
 }
 
-std::string SQLVoidValue::typeAsString() const
+const char * SQLVoidValue::typeAsString() const
 {
     return "Void";
 }
@@ -279,13 +272,6 @@ SQLValueRep * SQLVoidValue::clone() const
     SQLVoidValue *v = new SQLVoidValue;
 
     return v;
-}
-
-void * SQLVoidValue::typeUniqueTag() const
-{
-    // Return the functions address as the type unique tag.
-    static void *tag;
-    return (void *)&tag;
 }
 
 int SQLVoidValue::compare(SQLValueRep *) const
@@ -318,7 +304,7 @@ SQLBooleanValue::SQLBooleanValue(bool value_)
 {
 }
 
-bool SQLBooleanValue::fromString(std::string str)
+bool SQLBooleanValue::fromString(const std::string &str)
 {
     char c;
 
@@ -342,7 +328,7 @@ void SQLBooleanValue::toString(std::string &s)
     s = value ? "True" : "False";
 }
 
-std::string SQLBooleanValue::typeAsString() const
+const char * SQLBooleanValue::typeAsString() const
 {
     return "Boolean";
 }
@@ -354,13 +340,6 @@ SQLValueRep * SQLBooleanValue::clone() const
     v->value = value;
 
     return v;
-}
-
-void * SQLBooleanValue::typeUniqueTag() const
-{
-    // Return the address of a static variable as the type unique tag.
-    static void *tag;
-    return (void *)&tag;
 }
 
 int SQLBooleanValue::compare(SQLValueRep *rep) const
@@ -426,7 +405,7 @@ SQLIntegerValue::SQLIntegerValue(int value_)
 {
 }
 
-bool SQLIntegerValue::fromString(std::string s)
+bool SQLIntegerValue::fromString(const std::string &s)
 {
     std::stringstream ss(s);
 
@@ -460,7 +439,7 @@ void SQLIntegerValue::toString(std::string &s)
 #endif
 }
 
-std::string SQLIntegerValue::typeAsString() const
+const char * SQLIntegerValue::typeAsString() const
 {
     return "Integer";
 }
@@ -472,13 +451,6 @@ SQLValueRep * SQLIntegerValue::clone() const
     v->value = value;
 
     return v;
-}
-
-void * SQLIntegerValue::typeUniqueTag() const
-{
-    // Return the address of a static variable as the type unique tag.
-    static void *tag;
-    return (void *)&tag;
 }
 
 int SQLIntegerValue::compare(SQLValueRep *rep) const
@@ -548,7 +520,7 @@ SQLRealValue::SQLRealValue(double value)
 {
 }
 
-bool SQLRealValue::fromString(std::string s)
+bool SQLRealValue::fromString(const std::string &s)
 {
     double v;
     std::stringstream ss(s);
@@ -575,7 +547,7 @@ void SQLRealValue::toString(std::string &s)
 #endif
 }
 
-std::string SQLRealValue::typeAsString() const
+const char * SQLRealValue::typeAsString() const
 {
     return "Real";
 }
@@ -587,13 +559,6 @@ SQLValueRep * SQLRealValue::clone() const
     v->value = value;
 
     return v;
-}
-
-void * SQLRealValue::typeUniqueTag() const
-{
-    // Return the address of a static variable as the type unique tag.
-    static void *tag;
-    return (void *)&tag;
 }
 
 int SQLRealValue::compare(SQLValueRep *rep) const
@@ -662,7 +627,7 @@ SQLStringValue::SQLStringValue()
 {
 }
 
-SQLStringValue::SQLStringValue(std::string value_)
+SQLStringValue::SQLStringValue(const std::string &value_)
 : value(value_)
 {
 }
@@ -675,7 +640,7 @@ void SQLStringValue::setCaseInsensitive(bool b)
     caseInsensitive = b;
 }
 
-bool SQLStringValue::fromString(std::string s)
+bool SQLStringValue::fromString(const std::string &s)
 {
     value = s;
 
@@ -687,7 +652,7 @@ void SQLStringValue::toString(std::string &s)
     s = value;
 }
 
-std::string SQLStringValue::typeAsString() const
+const char * SQLStringValue::typeAsString() const
 {
     return "String";
 }
@@ -699,13 +664,6 @@ SQLValueRep * SQLStringValue::clone() const
     v->value = value;
 
     return v;
-}
-
-void * SQLStringValue::typeUniqueTag() const
-{
-    // Return the address of a static variable as the type unique tag.
-    static void *tag;
-    return (void *)&tag;
 }
 
 int SQLStringValue::compare(SQLValueRep *rep) const
@@ -726,7 +684,7 @@ int SQLStringValue::compare(SQLValueRep *rep) const
 	return strcmp(value.c_str(), r->value.c_str());
 }
 
-std::string SQLStringValue::getValue() const
+const std::string & SQLStringValue::getValue() const
 {
     return value;
 }
@@ -765,7 +723,7 @@ SQLDateTimeValue::SQLDateTimeValue(time_t value_)
 {
 }
 
-bool SQLDateTimeValue::fromString(std::string s)
+bool SQLDateTimeValue::fromString(const std::string &s)
 {
     struct tm tmbuf;
     memset(&tmbuf, 0, sizeof(tmbuf));
@@ -800,7 +758,7 @@ void SQLDateTimeValue::toString(std::string &s)
     s = buf;
 }
 
-std::string SQLDateTimeValue::typeAsString() const
+const char * SQLDateTimeValue::typeAsString() const
 {
     return "DateTime";
 }
@@ -812,13 +770,6 @@ SQLValueRep * SQLDateTimeValue::clone() const
     v->value = value;
 
     return v;
-}
-
-void * SQLDateTimeValue::typeUniqueTag() const
-{
-    // Return the address of a static variable as the type unique tag.
-    static void *tag;
-    return (void *)&tag;
 }
 
 int SQLDateTimeValue::compare(SQLValueRep *rep) const
@@ -879,7 +830,7 @@ SQLExceptionValue::SQLExceptionValue(std::string exception)
 {
 }
 
-bool SQLExceptionValue::fromString(std::string)
+bool SQLExceptionValue::fromString(const std::string &)
 {
     return false;
 }
@@ -889,7 +840,7 @@ void SQLExceptionValue::toString(std::string &s)
     s = exception_;
 }
 
-std::string SQLExceptionValue::typeAsString() const
+const char * SQLExceptionValue::typeAsString() const
 {
     return "Exception";
 }
@@ -899,13 +850,6 @@ SQLValueRep * SQLExceptionValue::clone() const
     SQLExceptionValue *e = new SQLExceptionValue(exception_);
 
     return e;
-}
-
-void * SQLExceptionValue::typeUniqueTag() const
-{
-    // Return the functions address as the type unique tag.
-    static void *tag;
-    return (void *)&tag;
 }
 
 int SQLExceptionValue::compare(SQLValueRep *v2) const

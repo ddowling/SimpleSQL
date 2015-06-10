@@ -31,18 +31,18 @@ public:
      * Lookup the a variable optionally in a class and return its
      * value.
      */
-    virtual SQLValue variableLookup(std::string class_name,
-				    std::string member_name) const;
+    virtual SQLValue variableLookup(const std::string &class_name,
+				    const std::string &member_name) const;
 
     /** Evaluate a function and return its value. */
-    virtual SQLValue functionLookup(std::string class_name,
-				    std::string member_name,
+    virtual SQLValue functionLookup(const std::string &class_name,
+				    const std::string &member_name,
 				    int num_args, SQLValue *arguments);
 
 protected:
     /** Evaluate some default SQL functions. */
-    SQLValue defaultFunctionLookup(std::string class_name,
-				   std::string member_name,
+    SQLValue defaultFunctionLookup(const std::string &class_name,
+				   const std::string &member_name,
 				   int num_args, SQLValue *arguments);
 
     SQLContext *nextInChain;

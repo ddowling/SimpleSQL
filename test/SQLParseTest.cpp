@@ -11,13 +11,30 @@
 
 #include "SQLParse.h"
 #include "SQLExpression.h"
+#include "SQLContext.h"
 #include <iostream>
 #include <assert.h>
 
 using namespace std;
 
-void
-t(string str, string match, bool err = false)
+class CatchDependanciesContext : public SQLContext
+{
+public:
+    virtual SQLValue variableLookup(const std::string &class_name,
+				    const std::string &member_name) const;
+
+};
+
+SQLValue CatchDependanciesContext::variableLookup(const std::string &class_name,
+						  const std::string &member_name) const
+{
+    cout << "got " << class_name << "." << member_name << endl;
+    // Return void
+
+    return SQLValue();;
+}
+
+void t(string str, string match, bool err = false)
 {
     cout << "Parsing : " << str << endl;
 
@@ -39,7 +56,12 @@ t(string str, string match, bool err = false)
 
     SQLExpression *e = parser.expression();
     if (e != 0)
+    {
 	cout << "Parse tree is : " << e->asString() << endl;
+
+	CatchDependanciesContext cdc;
+        e->evaluate(cdc);
+    }
 
     if (!err)
     {
@@ -94,6 +116,8 @@ int main()
     t("a / b", "Operation(a / b)");
     t("-a", "Negate(a)");
     t("f(a, b, c, d)", "Function(f, {a, b, c, d})");
+    t("ip.addr = '192.168.44.1' and ip.port in (80, 443) and http.host = 'www.example.com'",
+      "And(And(Equals(ip.addr, 192.168.44.1), In(ip.port, {80, 443})), Equals(http.host, www.example.com))");
 
     // Parse an empty expression
     t("", "");

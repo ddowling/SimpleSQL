@@ -34,13 +34,13 @@ public:
     virtual ~SQLValueRep();
 
     /** Sets the variable from the given string. */
-    virtual bool fromString(std::string s) = 0;
+    virtual bool fromString(const std::string &s) = 0;
 
     /** Extracts the variable into a string. */
     virtual void toString(std::string &s) = 0;
 
     /** Return the type as a printable string. */
-    virtual std::string typeAsString() const = 0;
+    virtual const char *typeAsString() const = 0;
 
     /** clone the current object and return a pointer to the new instance */
     virtual SQLValueRep *clone() const = 0;
@@ -64,12 +64,6 @@ protected:
     SQLValueRep *illegalOperation(char op);
 
 private:
-    /**
-     * Return a unique number for the object type. This allows
-     * quick type comparison.
-     */
-    virtual void *typeUniqueTag() const = 0;
-
     int refCount_;
 };
 
@@ -97,15 +91,13 @@ public:
     time_t asDateTime() const;
 #endif
 
-    bool fromString(std::string str);
+    bool fromString(const std::string &str);
 
     /** Return true if the objects are of the same type */
     bool isSameType(const SQLValue &v) const;
 
-    /** Return true if the object is void
-     * Needs to increase void_rep reference count so cannot be const
-     */
-    bool isVoid();
+    /** Return true if the object is void */
+    bool isVoid() const;
 
     /** Return true if the object is an exception */
     bool isException() const;
@@ -130,7 +122,7 @@ public:
 
 private:
     SQLValueRep *rep_;
-    static SQLVoidValue *void_rep_;
+    static SQLVoidValue *voidRep_;
 
     void setRep(SQLValueRep *rep)
     {
@@ -155,17 +147,14 @@ class SQLVoidValue
 : public SQLValueRep
 {
 public:
-    virtual bool fromString(std::string s);
+    virtual bool fromString(const std::string &s);
     virtual void toString(std::string &s);
 
-    virtual std::string typeAsString() const;
+    virtual const char *typeAsString() const;
     virtual SQLValueRep *clone() const;
     virtual int compare(SQLValueRep *rep) const;
     virtual SQLValueRep *binaryOperation(SQLValueRep *v2, char op);
     virtual SQLValueRep *unaryOperation(char op);
-
-private:
-    virtual void *typeUniqueTag() const;
 };
 
 /**
@@ -178,10 +167,10 @@ public:
     SQLBooleanValue();
     SQLBooleanValue(bool value);
 
-    virtual bool fromString(std::string s);
+    virtual bool fromString(const std::string &s);
     virtual void toString(std::string &s);
 
-    virtual std::string typeAsString() const;
+    virtual const char *typeAsString() const;
     virtual SQLValueRep *clone() const;
     virtual int compare(SQLValueRep *rep) const;
     virtual SQLValueRep *binaryOperation(SQLValueRep *v2, char op);
@@ -190,7 +179,6 @@ public:
     bool getValue() const;
 private:
     bool value;
-    virtual void *typeUniqueTag() const;
 };
 
 /**
@@ -203,10 +191,10 @@ public:
     SQLIntegerValue();
     SQLIntegerValue(int value);
 
-    virtual bool fromString(std::string s);
+    virtual bool fromString(const std::string &s);
     virtual void toString(std::string &s);
 
-    virtual std::string typeAsString() const;
+    virtual const char *typeAsString() const;
     virtual SQLValueRep *clone() const;
     virtual int compare(SQLValueRep *rep) const;
     virtual SQLValueRep *binaryOperation(SQLValueRep *v2, char op);
@@ -216,7 +204,6 @@ public:
 
 private:
     int value;
-    virtual void *typeUniqueTag() const;
 };
 
 /**
@@ -229,10 +216,10 @@ public:
     SQLRealValue();
     SQLRealValue(double value);
 
-    virtual bool fromString(std::string s);
+    virtual bool fromString(const std::string &s);
     virtual void toString(std::string &s);
 
-    virtual std::string typeAsString() const;
+    virtual const char *typeAsString() const;
     virtual SQLValueRep *clone() const;
     virtual int compare(SQLValueRep *rep) const;
     virtual SQLValueRep *binaryOperation(SQLValueRep *v2, char op);
@@ -241,7 +228,6 @@ public:
     double getValue() const;
 private:
     double value;
-    virtual void *typeUniqueTag() const;
 };
 
 /**
@@ -252,23 +238,22 @@ class SQLStringValue
 {
 public:
     SQLStringValue();
-    SQLStringValue(std::string value);
+    SQLStringValue(const std::string &value);
 
-    virtual bool fromString(std::string s);
+    virtual bool fromString(const std::string &s);
     virtual void toString(std::string &s);
 
-    virtual std::string typeAsString() const;
+    virtual const char *typeAsString() const;
     virtual SQLValueRep *clone() const;
     virtual int compare(SQLValueRep *rep) const;
     virtual SQLValueRep *binaryOperation(SQLValueRep *v2, char op);
     virtual SQLValueRep *unaryOperation(char op);
 
-    std::string getValue() const;
+    const std::string &getValue() const;
 
     static void setCaseInsensitive(bool s);
 private:
     std::string value;
-    virtual void *typeUniqueTag() const;
 
     static bool caseInsensitive;
 };
@@ -284,10 +269,10 @@ public:
     SQLDateTimeValue();
     SQLDateTimeValue(time_t value);
 
-    virtual bool fromString(std::string s);
+    virtual bool fromString(const std::string &s);
     virtual void toString(std::string &s);
 
-    virtual std::string typeAsString() const;
+    virtual const char *typeAsString() const;
     virtual SQLValueRep *clone() const;
     virtual int compare(SQLValueRep *rep) const;
     virtual SQLValueRep *binaryOperation(SQLValueRep *v2, char op);
@@ -300,7 +285,6 @@ private:
     static std::string format;
 
     time_t value;
-    virtual void *typeUniqueTag() const;
 };
 #endif
 
@@ -314,17 +298,16 @@ class SQLExceptionValue
 public:
     SQLExceptionValue(std::string exception);
 
-    virtual bool fromString(std::string s);
+    virtual bool fromString(const std::string &s);
     virtual void toString(std::string &s);
 
-    virtual std::string typeAsString() const;
+    virtual const char *typeAsString() const;
     virtual SQLValueRep *clone() const;
     virtual int compare(SQLValueRep *rep) const;
     virtual SQLValueRep *binaryOperation(SQLValueRep *v2, char op);
     virtual SQLValueRep *unaryOperation(char op);
 
 private:
-    virtual void *typeUniqueTag() const;
     std::string exception_;
 };
 

@@ -19,12 +19,12 @@ class TestContext
 : public SQLContext
 {
 public:
-    virtual SQLValue variableLookup(string class_name,
-				    string member_name) const;
+    virtual SQLValue variableLookup(const string &class_name,
+				    const string &member_name) const;
 };
 
-SQLValue TestContext::variableLookup(string class_name,
-				      string member_name) const
+SQLValue TestContext::variableLookup(const string &class_name,
+                                     const string &member_name) const
 {
     if (member_name == "a")
 	return SQLValue(new SQLStringValue("Tom"));
@@ -52,9 +52,13 @@ int main()
 	new SQLValueExpression(SQLExpression::SQLTrueValue);
     SQLValueExpression *fe =
 	new SQLValueExpression(SQLExpression::SQLFalseValue);
-    // Get an extra ref on these values to prevent them being deleted
+    SQLValueExpression *ve =
+        new SQLValueExpression(SQLValue());
+
+    // Get an extra ref on these values to prevent them from being deleted
     te->getRef();
     fe->getRef();
+    ve->getRef();
 
     cout << "Equals test" << endl;
     SQLEqualsExpression *e1 = new SQLEqualsExpression(te, te);
@@ -224,6 +228,30 @@ int main()
     assert(a4->evaluate(c).asBoolean() == false);
     f(a4);
 
+    SQLAndExpression *a5 = new SQLAndExpression(fe, ve);
+    cout << a5->asString() << " gives " << a5->evaluate(c).asString() << endl;
+    assert(a5->evaluate(c).asBoolean() == false);
+    assert(!a5->evaluate(c).isVoid());
+    f(a5);
+
+    SQLAndExpression *a6 = new SQLAndExpression(te, ve);
+    cout << a6->asString() << " gives " << a6->evaluate(c).asString() << endl;
+    assert(a6->evaluate(c).asBoolean() == false);
+    assert(a6->evaluate(c).isVoid());
+    f(a6);
+
+    SQLAndExpression *a7 = new SQLAndExpression(ve, fe);
+    cout << a7->asString() << " gives " << a7->evaluate(c).asString() << endl;
+    assert(a7->evaluate(c).asBoolean() == false);
+    assert(!a7->evaluate(c).isVoid());
+    f(a7);
+
+    SQLAndExpression *a8 = new SQLAndExpression(ve, te);
+    cout << a8->asString() << " gives " << a8->evaluate(c).asString() << endl;
+    assert(a8->evaluate(c).asBoolean() == false);
+    assert(a8->evaluate(c).isVoid());
+    f(a8);
+
     cout << "Or test" << endl;
     SQLOrExpression *o1 = new SQLOrExpression(te, te);
     cout << o1->asString() << " gives " << o1->evaluate(c).asString() << endl;
@@ -245,6 +273,30 @@ int main()
     assert(o4->evaluate(c).asBoolean() == true);
     f(o4);
 
+    SQLOrExpression *o5 = new SQLOrExpression(fe, ve);
+    cout << o5->asString() << " gives " << o5->evaluate(c).asString() << endl;
+    assert(o5->evaluate(c).asBoolean() == false);
+    assert(o5->evaluate(c).isVoid());
+    f(o5);
+
+    SQLOrExpression *o6 = new SQLOrExpression(te, ve);
+    cout << o6->asString() << " gives " << o6->evaluate(c).asString() << endl;
+    assert(o6->evaluate(c).asBoolean() == true);
+    assert(!o6->evaluate(c).isVoid());
+    f(o6);
+
+    SQLOrExpression *o7 = new SQLOrExpression(ve, fe);
+    cout << o7->asString() << " gives " << o7->evaluate(c).asString() << endl;
+    assert(o7->evaluate(c).asBoolean() == false);
+    assert(o7->evaluate(c).isVoid());
+    f(o7);
+
+    SQLOrExpression *o8 = new SQLOrExpression(ve, te);
+    cout << o8->asString() << " gives " << o8->evaluate(c).asString() << endl;
+    assert(o8->evaluate(c).asBoolean() == true);
+    assert(!o8->evaluate(c).isVoid());
+    f(o8);
+
     cout << "Not test" << endl;
     SQLNotExpression *not1 = new SQLNotExpression(te);
     cout << not1->asString() << " gives " << not1->evaluate(c).asString()
@@ -257,6 +309,13 @@ int main()
 	 << endl;
     assert(not2->evaluate(c).asBoolean() == true);
     f(not2);
+
+    SQLNotExpression *not3 = new SQLNotExpression(ve);
+    cout << not3->asString() << " gives " << not3->evaluate(c).asString()
+	 << endl;
+    assert(not3->evaluate(c).asBoolean() == false);
+    assert(not3->evaluate(c).isVoid());
+    f(not3);
 
     cout << "VariableExpression test" << endl;
     SQLVariableExpression *ve1 = new SQLVariableExpression("", "a");

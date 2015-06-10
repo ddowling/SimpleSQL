@@ -66,13 +66,13 @@ class TaskContext
 : public SQLContext
 {
 public:
-    virtual SQLValue variableLookup(string class_name,
-				     string member_name) const;
+    virtual SQLValue variableLookup(const string &class_name,
+                                    const string &member_name) const;
     Task *task_;
 };
 
-SQLValue TaskContext::variableLookup(string class_name,
-				     string member_name) const
+SQLValue TaskContext::variableLookup(const string &class_name,
+				     const string &member_name) const
 {
     if (member_name == "start")
 	return new SQLDateTimeValue(task_->start);
@@ -96,8 +96,10 @@ SQLValue TaskContext::variableLookup(string class_name,
 	return SQLContext::variableLookup(class_name, member_name);
 }
 
-int run_query(string s, int expected_count,
-	      bool expect_exception = false)
+int run_query(const string &s,
+              int expected_count,
+	      bool expect_exception = false,
+              bool expect_void = false)
 {
     SQLParse parser;
 
@@ -135,11 +137,16 @@ int run_query(string s, int expected_count,
 	}
 	else if (expect_exception)
 	{
-	    cout << "Was expecting an exception but did not get one"
-		 << endl;
+	    cout << "Was expecting an exception but did not get one" << endl;
 	    total_errors++;
 	    break;
 	}
+
+	if (v.isVoid() && !expect_void)
+        {
+            cout << "Did not expect a void value" << endl;
+            total_errors++;
+        }
 
 	if (e->evaluate(sc).asBoolean())
 	    count++;
@@ -173,9 +180,9 @@ int main()
     run_query("remark like '%k'", 2);
     run_query("crews = 10", 1);
     run_query("crews = 0", 0);
-    run_query("remark = 'Remark1'", 1);
+    run_query("remark = 'Remark1'", 1, false, true);
     run_query("remark is null", 2);
-    run_query("remark in ('Remark1', 'Remark2')", 2);
+    run_query("remark in ('Remark1', 'Remark2')", 2, false, true);
     run_query("crews in (1, 2, 3, 4, 5)", 5);
     run_query("crews in ('1', '2', '3', '4', '5')", 5);
     run_query("crews not in ('1', '3', '4', '5')", 6);
@@ -213,21 +220,21 @@ int main()
 
     // Test some queries containing void values that should run
     // without error.
-    run_query("void_value = 'fred'", 0);
-    run_query("void_value = ''", 0);
+    run_query("void_value = 'fred'", 0, false, true);
+    run_query("void_value = ''", 0, false, true);
     run_query("void_value is null", 10);
-    run_query("void_value = 'fred' or crews > 5", 5);
+    run_query("void_value = 'fred' or crews > 5", 5, false, true);
 
-    run_query("crews > 5 or void_value = 'fred'", 5);
-    run_query("void_value or crews > 5", 5);
-    run_query("crews > 5 or void_value", 5);
+    run_query("crews > 5 or void_value = 'fred'", 5, false, true);
+    run_query("void_value or crews > 5", 5, false, true);
+    run_query("crews > 5 or void_value", 5, false, true);
 
-    run_query("void_value = 'fred' and crews > 5", 0);
-    run_query("crews > 5 and void_value = 'fred'", 0);
-    run_query("not (void_value = 'fred') and crews > 5", 5);
-    run_query("crews > 5 and not (void_value = 'fred')", 5);
-    run_query("void_value and crews > 5", 0);
-    run_query("crews > 5 and void_value", 0);
+    run_query("void_value = 'fred' and crews > 5", 0, false, true);
+    run_query("crews > 5 and void_value = 'fred'", 0, false, true);
+    run_query("not (void_value = 'fred') and crews > 5", 0, false, true);
+    run_query("crews > 5 and not (void_value = 'fred')", 0, false, true);
+    run_query("void_value and crews > 5", 0, false, true);
+    run_query("crews > 5 and void_value", 0, false, true);
 
     cout << "Found a total of " << total_errors << " errors" << endl;
 

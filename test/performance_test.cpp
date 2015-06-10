@@ -97,13 +97,13 @@ class ShiftContext
 : public SQLContext
 {
 public:
-    virtual SQLValue variableLookup(string class_name,
-				    string member_name) const;
+    virtual SQLValue variableLookup(const string &class_name,
+				    const string &member_name) const;
     Shift *shift_;
 };
 
-SQLValue ShiftContext::variableLookup(string class_name,
-				      string member_name) const
+SQLValue ShiftContext::variableLookup(const string &class_name,
+				      const string &member_name) const
 {
     if (member_name == "start")
 	return new SQLDateTimeValue(shift_->start);
@@ -128,7 +128,7 @@ double diff(struct timeval &end, struct timeval &start)
     return d;
 }
 
-int run_query(string s)
+int run_query(const string &s)
 {
     struct timeval start;
     struct timeval end;
@@ -190,7 +190,9 @@ int run_query(string s)
     return count;
 }
 
-int run_hard_query1(string status, string level, string unit)
+int run_hard_query1(const string &status,
+                    const string &level,
+                    const string &unit)
 {
     struct timeval start;
     struct timeval end;

@@ -172,11 +172,11 @@ bool SQLBinaryExpression::evaluateSiblings(SQLContext &context,
 {
     v1 = expr1->evaluate(context);
     // Exception should just return.
-    if (v1.isException())
+    if (v1.isException() || v1.isVoid())
 	return false;
 
     v2 = expr2->evaluate(context);
-    if (v2.isException())
+    if (v2.isException() || v2.isVoid())
     {
 	v1 = v2;
 	return false;
@@ -304,16 +304,21 @@ const char * SQLGreaterEqualsExpression::isA() const
 
 SQLValue SQLAndExpression::evaluate(SQLContext &context)
 {
-    SQLValue v = expr1->evaluate(context);
+    SQLValue v1 = expr1->evaluate(context);
     // Exception should just return.
-    if (v.isException())
-	return v;
+    if (v1.isException())
+	return v1;
 
-    // Shortcut false return
-    if (!v.asBoolean())
-	return v;
+    // Shortcut false return. Don't shortcut on void as we want this to
+    // walk the entire expression tree.
+    if (!v1.isVoid() && !v1.asBoolean())
+	return v1;
 
-    return expr2->evaluate(context);
+    SQLValue v2 = expr2->evaluate(context);
+    if (!v2.asBoolean() || v2.isVoid())
+	return v2;
+    else
+	return v1;
 }
 
 const char * SQLAndExpression::isA() const
@@ -323,16 +328,20 @@ const char * SQLAndExpression::isA() const
 
 SQLValue SQLOrExpression::evaluate(SQLContext &context)
 {
-    SQLValue v = expr1->evaluate(context);
+    SQLValue v1 = expr1->evaluate(context);
     // Exception should just return.
-    if (v.isException())
-	return v;
+    if (v1.isException())
+	return v1;
 
     // Shortcut true return
-    if (v.asBoolean())
-	return v;
+    if (v1.asBoolean())
+	return v1;
 
-    return expr2->evaluate(context);
+    SQLValue v2 = expr2->evaluate(context);
+    if (v2.asBoolean() || v2.isVoid())
+	return v2;
+    else
+	return v1;
 }
 
 const char * SQLOrExpression::isA() const
@@ -406,8 +415,10 @@ SQLValue SQLInExpression::evaluate(SQLContext &context)
 {
     SQLValue v1 = expr->evaluate(context);
     // Exception should just return.
-    if (v1.isException())
+    if (v1.isException() || v1.isVoid())
 	return v1;
+
+    bool got_void = false;
 
     for (int i = 0; i < list->numExpressions(); i++)
     {
@@ -417,16 +428,25 @@ SQLValue SQLInExpression::evaluate(SQLContext &context)
 	if (v2.isException())
 	    return v2;
 
+        if (v2.isVoid())
+        {
+            got_void = true;
+            continue;
+        }
+
 	// Convert v2 to the same type as v1
 	if (!v2.typeConvert(v1))
 	    return SQLValue(new SQLExceptionValue(
-				 "Mismatched types in list expression:" +
-				 v1.asString() + " and " + v2.asString()));
+                            "Mismatched types in list expression:" +
+                            v1.asString() + " and " + v2.asString()));
 	if (v1.compare(v2) == 0)
 	    return SQLTrueValue;
     }
 
-    return SQLFalseValue;
+    if (got_void)
+        return SQLValue();
+    else
+        return SQLFalseValue;
 }
 
 // Show the parse tree as a string. This is useful for debugging

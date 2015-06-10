@@ -22,12 +22,12 @@ class TaskContext
 : public SQLContext
 {
 public:
-    virtual SQLValue variableLookup(string class_name,
-				    string member_name) const;
+    virtual SQLValue variableLookup(const string &class_name,
+				    const string &member_name) const;
 };
 
-SQLValue TaskContext::variableLookup(string class_name,
-				     string member_name) const
+SQLValue TaskContext::variableLookup(const string &class_name,
+				     const string &member_name) const
 {
     if (member_name == "x")
 	return new SQLIntegerValue(3);
@@ -41,7 +41,7 @@ SQLValue TaskContext::variableLookup(string class_name,
 static int total_errors = 0;
 
 void
-run_expression(string s, double v2)
+run_expression(const string &s, double v2)
 {
     SQLParse parser;
 

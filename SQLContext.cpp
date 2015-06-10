@@ -38,8 +38,8 @@ SQLContext * SQLContext::getNextInChain() const
     return nextInChain;
 }
 
-SQLValue SQLContext::variableLookup(std::string class_name,
-				    std::string member_name) const
+SQLValue SQLContext::variableLookup(const std::string &class_name,
+				    const std::string &member_name) const
 {
     if (nextInChain != 0)
 	return nextInChain->variableLookup(class_name, member_name);
@@ -56,8 +56,8 @@ SQLValue SQLContext::variableLookup(std::string class_name,
     }
 }
 
-SQLValue SQLContext::functionLookup(std::string class_name,
-				    std::string member_name,
+SQLValue SQLContext::functionLookup(const std::string &class_name,
+				    const std::string &member_name,
 				    int num_args, SQLValue *args)
 {
     if (nextInChain != 0)
@@ -68,8 +68,8 @@ SQLValue SQLContext::functionLookup(std::string class_name,
 				     num_args, args);
 }
 
-SQLValue SQLContext::defaultFunctionLookup(std::string class_name,
-					   std::string member_name,
+SQLValue SQLContext::defaultFunctionLookup(const std::string &class_name,
+					   const std::string &member_name,
 					   int num_args, SQLValue *args)
 {
     // These functions should have global scope
