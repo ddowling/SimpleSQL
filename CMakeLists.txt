@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 2.8)
 
+add_definitions(-DSQL_DATE_SUPPORT=1)
+
 find_package(BISON)
 find_package(FLEX)
 

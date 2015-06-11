@@ -14,8 +14,6 @@
 #include <string>
 #include <assert.h>
 
-#define SQL_DATE_SUPPORT 1
-
 #if SQL_DATE_SUPPORT
 #include <time.h>
 #endif

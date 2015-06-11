@@ -24,8 +24,10 @@ using namespace std;
 
 struct Shift
 {
+#if SQL_DATE_SUPPORT
     time_t start;
     time_t end;
+#endif
 
     string status;
     string unit;
@@ -40,16 +42,20 @@ void make_shifts()
 {
     shifts = new Shift *[max_shifts];
 
+#if SQL_DATE_SUPPORT
     SQLDateTimeValue dt;
     dt.fromString("01/12/2010 00:00:00");
+#endif
 
     for(int i = 0; i < max_shifts; i++)
     {
 	Shift *s = new Shift;
 	shifts[i] = s;
 
+#if SQL_DATE_SUPPORT
 	s->start = dt.getValue() + (rand() % 3600*17);
 	s->end = s->start + (rand() % 3600*9);
+#endif
 
 	int res = rand() % 4;
 	switch(res)
@@ -105,11 +111,13 @@ public:
 SQLValue ShiftContext::variableLookup(const string &class_name,
 				      const string &member_name) const
 {
+#if SQL_DATE_SUPPORT
     if (member_name == "start")
 	return new SQLDateTimeValue(shift_->start);
     else if (member_name == "end")
 	return new SQLDateTimeValue(shift_->end);
-    else if (member_name == "status")
+#endif
+    if (member_name == "status")
 	return new SQLStringValue(shift_->status);
     else if (member_name == "unit")
 	return new SQLStringValue(shift_->unit);
@@ -190,6 +198,7 @@ int run_query(const string &s)
     return count;
 }
 
+#if SQL_DATE_SUPPORT
 int run_hard_query1(const string &status,
                     const string &level,
                     const string &unit)
@@ -223,11 +232,14 @@ int run_hard_query1(const string &status,
 
     return count;
 }
+#endif
 
 int main()
 {
-    // FIXME date time parsing if very rigid
+#if SQL_DATE_SUPPORT
+    // FIXME date time parsing is very rigid
     SQLDateTimeValue::setFormat("%d/%m/%Y %H:%M:%S");
+#endif
 
     cout << "Building Shifts" << endl;
 
@@ -244,6 +256,7 @@ int main()
 
     assert(r1 + r2 + r4 + r5 == max_shifts);
 
+#if SQL_DATE_SUPPORT
     // Find all the ASOs in unit one who are on duty at 1200.
     string s =
 	"status = 'W' and start < '01/12/2010 12:00:00'"
@@ -265,6 +278,7 @@ int main()
     r7 = run_hard_query1("O", "Supervisor", "Unit 3");
 
     assert(r6 == r7);
+#endif
 
     return 0;
 }

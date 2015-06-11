@@ -18,8 +18,10 @@ using namespace std;
 
 struct Task
 {
+#if SQL_DATE_SUPPORT
     time_t start;
     time_t end;
+#endif
     string status;
     int crews;
     string remark;
@@ -35,17 +37,21 @@ make_tasks()
 {
     tasks = new Task *[max_tasks];
 
+#if SQL_DATE_SUPPORT
     SQLDateTimeValue dt;
     dt.fromString("00:00 01/12/2010");
     time_t dt_t = dt.getValue();
+#endif
 
     for(int i = 0; i < max_tasks; i++)
     {
 	Task *t = new Task;
 	tasks[i] = t;
 
+#if SQL_DATE_SUPPORT
 	t->start = dt_t + (i * 3600);
 	t->end = dt_t + ((i+1) * 3600);
+#endif
 
 	const char *status[4] = { "Driving", "Miscellaneous",
 				  "Travelling", "Shunting" };
@@ -74,11 +80,13 @@ public:
 SQLValue TaskContext::variableLookup(const string &class_name,
 				     const string &member_name) const
 {
+#if SQL_DATE_SUPPORT
     if (member_name == "start")
 	return new SQLDateTimeValue(task_->start);
     else if (member_name == "end")
 	return new SQLDateTimeValue(task_->end);
-    else if (member_name == "status")
+#endif
+    if (member_name == "status")
 	return new SQLStringValue(task_->status);
     else if (member_name == "crews")
 	return new SQLIntegerValue(task_->crews);
@@ -166,18 +174,22 @@ int run_query(const string &s,
 
 int main()
 {
+#if SQL_DATE_SUPPORT
     // FIXME date time parsing if very rigid
     SQLDateTimeValue::setFormat("%H:%M %d/%m/%Y");
+#endif
 
     make_tasks();
 
+#if SQL_DATE_SUPPORT
     run_query("start between '05:00 1/12/2010' and '7:00 1/12/2010'",
 	      3);
     run_query("end not between '03:00 1/12/2010' and '5:00 1/12/2010'",
 	      7);
-    run_query("remark like 'Remark_'", 3);
-    run_query("remark like 'Rem%'", 4);
-    run_query("remark like '%k'", 2);
+#endif
+    run_query("remark like 'Remark_'", 3, false, true);
+    run_query("remark like 'Rem%'", 4, false, true);
+    run_query("remark like '%k'", 2, false, true);
     run_query("crews = 10", 1);
     run_query("crews = 0", 0);
     run_query("remark = 'Remark1'", 1, false, true);
