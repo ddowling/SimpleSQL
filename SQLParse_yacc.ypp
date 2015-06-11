@@ -239,7 +239,7 @@ expression	: expression IN_T expression_list
 		| STRING_T
 			{
 			    $$ = new SQLValueExpression(
-			             new SQLStringValue($1));
+                                new SQLStringValue($1));
 			    delete [] $1;
 			}
 		| INT_T

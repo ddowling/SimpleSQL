@@ -12,6 +12,8 @@
 #include "SQLExpression.h"
 #include "SQLContext.h"
 #include <assert.h>
+#include <string.h>
+#include <stdio.h>
 
 SQLValue SQLExpression::SQLTrueValue(new SQLBooleanValue(true));
 SQLValue SQLExpression::SQLFalseValue(new SQLBooleanValue(false));
@@ -175,22 +177,30 @@ bool SQLBinaryExpression::evaluateSiblings(SQLContext &context,
     if (v1.isException() || v1.isVoid())
 	return false;
 
-    v2 = expr2->evaluate(context);
+    // Performance optimisation to aim to only do the type conversion once
+    // for things like SQLDateTimeValue
+    SQLValueExpression *ve = dynamic_cast<SQLValueExpression *>(expr2);
+    if (ve != 0)
+        v2 = ve->evaluateAsType(v1);
+    else
+        v2 = expr2->evaluate(context);
+
     if (v2.isException() || v2.isVoid())
     {
 	v1 = v2;
 	return false;
     }
 
-    if (!v2.typeConvert(v1))
-    {
-	v1 = SQLValue(new SQLExceptionValue(
-                          "Mismatched types in expression: " +
-			  v1.asString() + " and " + v2.asString()));
-	return false;
-    }
+    if (v2.isSameType(v1))
+        return true;
 
-    return true;
+    if (v2.typeConvert(v1))
+        return true;
+
+    v1 = SQLValue(new SQLExceptionValue(
+                      "Mismatched types in expression: " +
+                      v1.asString() + " and " + v2.asString()));
+    return false;
 }
 
 std::string SQLTerminalExpression::asString() const
@@ -627,6 +637,24 @@ SQLValueExpression::SQLValueExpression(SQLValue value_)
 SQLValue SQLValueExpression::evaluate(SQLContext &)
 {
     return value;
+}
+
+// Extension to allow caching the type conversions
+SQLValue SQLValueExpression::evaluateAsType(const SQLValue &v2)
+{
+    if (value.isSameType(v2))
+        return value;
+
+    if (typedValue.isSameType(v2))
+        return typedValue;
+
+    // FIXME Messy
+    std::string s = value.asString();
+    typedValue = SQLValue(new SQLStringValue(s));
+    if (typedValue.typeConvert(v2))
+        return typedValue;
+    else
+        return value;
 }
 
 const char * SQLValueExpression::isA() const

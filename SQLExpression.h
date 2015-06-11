@@ -385,8 +385,13 @@ public:
     virtual std::string asString() const;
 
     SQLValue evaluate(SQLContext &context);
+
+    // Extension to allow caching the type conversions
+    SQLValue evaluateAsType(const SQLValue &v2);
+
 protected:
     SQLValue value;
+    SQLValue typedValue;
 };
 
 #endif
