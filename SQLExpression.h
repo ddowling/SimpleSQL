@@ -28,8 +28,7 @@ public:
 
     /** Show the parse tree as a string. This is useful for debugging */
     virtual std::string asString() const = 0;
-    virtual const char *isA() const;
-    virtual std::string shortName() const;
+    virtual const char *shortName() const = 0;
 
     static SQLValue SQLTrueValue;
     static SQLValue SQLFalseValue;
@@ -81,7 +80,7 @@ class SQLUnaryExpression
 public:
     SQLUnaryExpression(SQLExpression *expr);
     virtual std::string asString() const;
-    virtual const char *isA() const;
+    virtual const char *shortName() const;
 
 protected:
     virtual ~SQLUnaryExpression();
@@ -97,7 +96,7 @@ class SQLBinaryExpression
 public:
     SQLBinaryExpression(SQLExpression *expr1, SQLExpression *expr2);
     virtual std::string asString() const;
-    virtual const char *isA() const;
+    virtual const char *shortName() const;
 
 protected:
     virtual ~SQLBinaryExpression();
@@ -115,7 +114,7 @@ class SQLTerminalExpression
 : public SQLExpression
 {
     virtual std::string asString() const;
-    virtual const char *isA() const;
+    virtual const char *shortName() const;
 };
 
 /**
@@ -127,7 +126,7 @@ class SQLEqualsExpression
 public:
     SQLEqualsExpression(SQLExpression *expr1, SQLExpression *expr2)
         : SQLBinaryExpression(expr1, expr2) { ; }
-    virtual const char *isA() const;
+    virtual const char *shortName() const;
 
     SQLValue evaluate(SQLContext &context);
 };
@@ -141,7 +140,7 @@ class SQLNotEqualsExpression
 public:
     SQLNotEqualsExpression(SQLExpression *expr1, SQLExpression *expr2)
         : SQLBinaryExpression(expr1, expr2) { ; }
-    virtual const char *isA() const;
+    virtual const char *shortName() const;
 
     SQLValue evaluate(SQLContext &context);
 };
@@ -155,7 +154,7 @@ class SQLLessThanExpression
 public:
     SQLLessThanExpression(SQLExpression *expr1, SQLExpression *expr2)
         : SQLBinaryExpression(expr1, expr2) { ; }
-    virtual const char *isA() const;
+    virtual const char *shortName() const;
 
     SQLValue evaluate(SQLContext &context);
 };
@@ -169,7 +168,7 @@ class SQLGreaterThanExpression
 public:
     SQLGreaterThanExpression(SQLExpression *expr1, SQLExpression *expr2)
         : SQLBinaryExpression(expr1, expr2) { ; }
-    virtual const char *isA() const;
+    virtual const char *shortName() const;
 
     SQLValue evaluate(SQLContext &context);
 };
@@ -183,7 +182,7 @@ class SQLLessEqualsExpression
 public:
     SQLLessEqualsExpression(SQLExpression *expr1, SQLExpression *expr2)
         : SQLBinaryExpression(expr1, expr2) { ; }
-    virtual const char *isA() const;
+    virtual const char *shortName() const;
 
     SQLValue evaluate(SQLContext &context);
 };
@@ -197,7 +196,7 @@ class SQLGreaterEqualsExpression
 public:
     SQLGreaterEqualsExpression(SQLExpression *expr1, SQLExpression *expr2)
         : SQLBinaryExpression(expr1, expr2) { ; }
-    virtual const char *isA() const;
+    virtual const char *shortName() const;
 
     SQLValue evaluate(SQLContext &context);
 };
@@ -211,7 +210,7 @@ class SQLAndExpression
 public:
     SQLAndExpression(SQLExpression *expr1, SQLExpression *expr2)
         : SQLBinaryExpression(expr1, expr2) { ; }
-    virtual const char *isA() const;
+    virtual const char *shortName() const;
 
     SQLValue evaluate(SQLContext &context);
 };
@@ -225,7 +224,7 @@ class SQLOrExpression
 public:
     SQLOrExpression(SQLExpression *expr1, SQLExpression *expr2)
         : SQLBinaryExpression(expr1, expr2) { ; }
-    virtual const char *isA() const;
+    virtual const char *shortName() const;
 
     SQLValue evaluate(SQLContext &context);
 };
@@ -241,7 +240,7 @@ public:
 			   char op_)
         : SQLBinaryExpression(expr1, expr2), op(op_) { ; }
     virtual std::string asString() const;
-    virtual const char *isA() const;
+    virtual const char *shortName() const;
 
     SQLValue evaluate(SQLContext &context);
 protected:
@@ -257,7 +256,7 @@ class SQLNotExpression
 public:
     SQLNotExpression(SQLExpression *expr)
         : SQLUnaryExpression(expr) { ; }
-    virtual const char *isA() const;
+    virtual const char *shortName() const;
 
     SQLValue evaluate(SQLContext &context);
 };
@@ -271,7 +270,7 @@ class SQLNegateExpression
 public:
     SQLNegateExpression(SQLExpression *expr)
         : SQLUnaryExpression(expr) { ; }
-    virtual const char *isA() const;
+    virtual const char *shortName() const;
 
     SQLValue evaluate(SQLContext &context);
 };
@@ -289,7 +288,7 @@ public:
 
     /** Show the parse tree as a string. This is useful for debugging */
     virtual std::string asString() const;
-    virtual const char *isA() const;
+    virtual const char *shortName() const;
 
 protected:
     ~SQLInExpression();
@@ -307,7 +306,7 @@ public:
     SQLLikeExpression(SQLExpression *expr,
                       const std::string &pattern,
 		      const std::string &escape);
-    const char *isA() const;
+    const char *shortName() const;
     std::string asString() const;
 
     SQLValue evaluate(SQLContext &context);
@@ -331,7 +330,7 @@ public:
 
     /** Show the parse tree as a string. This is useful for debugging */
     virtual std::string asString() const;
-    virtual const char *isA() const;
+    virtual const char *shortName() const;
 
 protected:
     ~SQLFunctionExpression();
@@ -349,7 +348,7 @@ class SQLNullExpression
 public:
     SQLNullExpression(SQLExpression *expr)
         : SQLUnaryExpression(expr) { ; }
-    virtual const char *isA() const;
+    virtual const char *shortName() const;
 
     SQLValue evaluate(SQLContext &context);
 };
@@ -364,7 +363,7 @@ public:
     SQLVariableExpression(const std::string &class_name,
                           const std::string &member_name)
         : className(class_name), memberName(member_name) { ; }
-    virtual const char *isA() const;
+    virtual const char *shortName() const;
     virtual std::string asString() const;
 
     SQLValue evaluate(SQLContext &context);
@@ -381,7 +380,7 @@ class SQLValueExpression
 {
 public:
     SQLValueExpression(SQLValue value);
-    virtual const char *isA() const;
+    virtual const char *shortName() const;
     virtual std::string asString() const;
 
     SQLValue evaluate(SQLContext &context);
