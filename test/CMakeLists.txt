@@ -47,3 +47,9 @@ target_link_libraries(performance_test
     SimpleSQL
 )
 add_test(performance_test performance_test)
+
+add_executable(ip_test ip_test.cpp)
+target_link_libraries(ip_test
+    SimpleSQL
+)
+add_test(ip_test ip_test)

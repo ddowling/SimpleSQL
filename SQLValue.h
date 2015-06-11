@@ -286,6 +286,35 @@ private:
 };
 #endif
 
+#if SQL_IP_SUPPORT
+
+#include <netinet/in.h>
+
+/**
+ * Represent the SQL IP address value.
+ */
+class SQLIPAddressValue
+: public SQLValueRep
+{
+public:
+    SQLIPAddressValue();
+    SQLIPAddressValue(const std::string &s);
+
+    virtual bool fromString(const std::string &s);
+    virtual void toString(std::string &s);
+
+    virtual const char *typeAsString() const;
+    virtual SQLValueRep *clone() const;
+    virtual int compare(SQLValueRep *rep) const;
+    virtual SQLValueRep *binaryOperation(SQLValueRep *v2, char op);
+    virtual SQLValueRep *unaryOperation(char op);
+
+    time_t getValue() const;
+private:
+    struct in_addr value;
+};
+#endif
+
 /**
  * This class is used to pass exception information up the evaluation
  * tree to the user

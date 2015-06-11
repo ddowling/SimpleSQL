@@ -715,11 +715,12 @@ SQLValueRep * SQLStringValue::unaryOperation(char op)
 std::string SQLDateTimeValue::format = "%Y-%m-%d %H:%M:%S";
 
 SQLDateTimeValue::SQLDateTimeValue()
+ : value(0)
 {
 }
 
 SQLDateTimeValue::SQLDateTimeValue(time_t value_)
-: value(value_)
+ : value(value_)
 {
 }
 
@@ -822,6 +823,77 @@ SQLValueRep * SQLDateTimeValue::unaryOperation(char op)
 {
     return illegalOperation(op);
 }
+#endif
+
+#if SQL_IP_SUPPORT
+
+#include <arpa/inet.h>
+
+SQLIPAddressValue::SQLIPAddressValue()
+{
+}
+
+SQLIPAddressValue::SQLIPAddressValue(const std::string &s)
+{
+    fromString(s);
+}
+
+bool SQLIPAddressValue::fromString(const std::string &s)
+{
+    bool res = inet_aton(s.c_str(), &value) != 0;
+
+    //printf("value = %08x addr = %s\n", value.s_addr, s.c_str());
+
+    return res;
+}
+
+void SQLIPAddressValue::toString(std::string &s)
+{
+    s = inet_ntoa(value);
+}
+
+const char * SQLIPAddressValue::typeAsString() const
+{
+    return "IPAddress";
+}
+
+SQLValueRep * SQLIPAddressValue::clone() const
+{
+    SQLIPAddressValue *v = new SQLIPAddressValue;
+
+    v->value = value;
+
+    return v;
+}
+
+int SQLIPAddressValue::compare(SQLValueRep *rep) const
+{
+    assert(isSameType(rep));
+
+    SQLIPAddressValue *r = (SQLIPAddressValue *)rep;
+
+    unsigned long l1 = ntohl(value.s_addr);
+    unsigned long l2 = ntohl(r->value.s_addr);
+
+    if (l1 < l2)
+        return -1;
+    else if (l1 > l2)
+        return 1;
+    else
+        return 0;
+}
+
+// Perform the given arithmetic operation and return the result
+SQLValueRep * SQLIPAddressValue::binaryOperation(SQLValueRep *v2, char op)
+{
+    return illegalOperation(op);
+}
+
+SQLValueRep * SQLIPAddressValue::unaryOperation(char op)
+{
+    return illegalOperation(op);
+}
+
 #endif
 
 // Exception Value class

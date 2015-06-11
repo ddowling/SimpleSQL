@@ -32,8 +32,7 @@ static Task **tasks;
 
 int total_errors = 0;
 
-void
-make_tasks()
+void make_tasks()
 {
     tasks = new Task *[max_tasks];
 

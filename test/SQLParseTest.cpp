@@ -28,10 +28,13 @@ public:
 SQLValue CatchDependanciesContext::variableLookup(const std::string &class_name,
 						  const std::string &member_name) const
 {
-    cout << "got " << class_name << "." << member_name << endl;
-    // Return void
+    if (class_name.empty())
+        cout << "Got variable " << member_name << endl;
+    else
+        cout << "Got variable " << class_name << "." << member_name << endl;
 
-    return SQLValue();;
+    // Return void
+    return SQLValue();
 }
 
 void t(string str, string match, bool err = false)
