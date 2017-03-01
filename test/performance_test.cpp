@@ -175,7 +175,7 @@ int run_query(const string &s)
 
 	SQLValue v = e->evaluate(sc);
 
-	if (v.isVoid() || v.isException())
+	if (v.isNull() || v.isException())
 	{
 	    cerr << "Query '" << s
 		 << "' did not return a boolean result "

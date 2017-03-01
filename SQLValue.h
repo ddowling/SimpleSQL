@@ -19,7 +19,7 @@
 #endif
 
 class SQLValueRep;
-class SQLVoidValue;
+class SQLNullValue;
 
 /**
  * Implementation of the SQL variable types
@@ -95,7 +95,7 @@ public:
     bool isSameType(const SQLValue &v) const;
 
     /** Return true if the object is void */
-    bool isVoid() const;
+    bool isNull() const;
 
     /** Return true if the object is an exception */
     bool isException() const;
@@ -120,7 +120,7 @@ public:
 
 private:
     SQLValueRep *rep_;
-    static SQLVoidValue *voidRep_;
+    static SQLNullValue *nullRep_;
 
     void setRep(SQLValueRep *rep)
     {
@@ -141,8 +141,7 @@ private:
 /**
  * Represent the SQL void value.
  */
-class SQLVoidValue
-: public SQLValueRep
+class SQLNullValue : public SQLValueRep
 {
 public:
     virtual bool fromString(const std::string &s);

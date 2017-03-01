@@ -16,8 +16,8 @@ using namespace std;
 
 int main()
 {
-    // VOID TESTS
-    SQLValue void1(new SQLVoidValue());
+    // NULL TESTS
+    SQLValue void1(new SQLNullValue());
     SQLValue void2;
 
     assert(void1 != void2);

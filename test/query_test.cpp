@@ -92,12 +92,12 @@ SQLValue TaskContext::variableLookup(const string &class_name,
     else if (member_name == "remark")
     {
 	if (task_->remark.empty())
-	    return SQLValue(new SQLVoidValue);
+	    return new SQLNullValue;
 	else
 	    return new SQLStringValue(task_->remark);
     }
-    else if (member_name == "void_value")
-	return new SQLVoidValue;
+    else if (member_name == "null_value")
+	return new SQLNullValue;
     else
 	// If no match then pass evaluation onto other context if any
 	return SQLContext::variableLookup(class_name, member_name);
@@ -106,7 +106,7 @@ SQLValue TaskContext::variableLookup(const string &class_name,
 int run_query(const string &s,
               int expected_count,
 	      bool expect_exception = false,
-              bool expect_void = false)
+              bool expect_null = false)
 {
     SQLParse parser;
 
@@ -119,7 +119,8 @@ int run_query(const string &s,
 
     SQLExpression *e = parser.expression();
 
-    int count = 0;
+    int true_count = 0;
+    int null_count = 0;
 
     TaskContext sc;
 
@@ -149,26 +150,33 @@ int run_query(const string &s,
 	    break;
 	}
 
-	if (v.isVoid() && !expect_void)
-        {
-            cout << "Did not expect a void value" << endl;
-            total_errors++;
-        }
+	if (v.isNull())
+	{
+	    null_count++;
 
-	if (e->evaluate(sc).asBoolean())
-	    count++;
+	    if (!expect_null)
+            {
+                cout << "Did not expect a null value" << endl;
+                total_errors++;
+            }
+        }
+        else if (v.asBoolean())
+	    true_count++;
     }
 
-    cout << "query '" << s << "' matched " << count << " tasks" << endl;
+    cout << "query '" << s << "' matched " << true_count << " tasks";
+    if (expect_null)
+        cout << " with " << null_count << " unknown";
+    cout << endl;
 
-    if (count != expected_count)
+    if (true_count != expected_count)
     {
 	cout << "Did not get the expected match count " << expected_count
 	     << endl;
 	total_errors++;
     }
 
-    return count;
+    return true_count;
 }
 
 int main()
@@ -208,7 +216,7 @@ int main()
     run_query("crews > 5", 5);
     run_query("crews >= 5", 6);
 
-    // Test some void values that should return no matches and errors
+    // Test some numm values that should return no matches and errors
     run_query("xxx >= 5", 0, true);
     run_query("xxx <= 5", 0, true);
     run_query("yyy < 0", 0, true);
@@ -229,23 +237,23 @@ int main()
     run_query("7.0 = 7", 10, false);
     run_query("'vvv'", 0);
 
-    // Test some queries containing void values that should run
+    // Test some queries containing null values that should run
     // without error.
-    run_query("void_value = 'fred'", 0, false, true);
-    run_query("void_value = ''", 0, false, true);
-    run_query("void_value is null", 10);
-    run_query("void_value = 'fred' or crews > 5", 5, false, true);
+    run_query("null_value = 'fred'", 0, false, true);
+    run_query("null_value = ''", 0, false, true);
+    run_query("null_value is null", 10);
+    run_query("null_value = 'fred' or crews > 5", 5, false, true);
 
-    run_query("crews > 5 or void_value = 'fred'", 5, false, true);
-    run_query("void_value or crews > 5", 5, false, true);
-    run_query("crews > 5 or void_value", 5, false, true);
+    run_query("crews > 5 or null_value = 'fred'", 5, false, true);
+    run_query("null_value or crews > 5", 5, false, true);
+    run_query("crews > 5 or null_value", 5, false, true);
 
-    run_query("void_value = 'fred' and crews > 5", 0, false, true);
-    run_query("crews > 5 and void_value = 'fred'", 0, false, true);
-    run_query("not (void_value = 'fred') and crews > 5", 0, false, true);
-    run_query("crews > 5 and not (void_value = 'fred')", 0, false, true);
-    run_query("void_value and crews > 5", 0, false, true);
-    run_query("crews > 5 and void_value", 0, false, true);
+    run_query("null_value = 'fred' and crews > 5", 0, false, true);
+    run_query("crews > 5 and null_value = 'fred'", 0, false, true);
+    run_query("not (null_value = 'fred') and crews > 5", 0, false, true);
+    run_query("crews > 5 and not (null_value = 'fred')", 0, false, true);
+    run_query("null_value and crews > 5", 0, false, true);
+    run_query("crews > 5 and null_value", 0, false, true);
 
     cout << "Found a total of " << total_errors << " errors" << endl;
 

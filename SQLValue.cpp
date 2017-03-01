@@ -22,18 +22,18 @@
 #include <stdio.h>
 #endif
 
-SQLVoidValue * SQLValue::voidRep_ = 0;
+SQLNullValue * SQLValue::nullRep_ = 0;
 
 SQLValue::SQLValue()
 {
-    if (voidRep_ == 0)
+    if (nullRep_ == 0)
     {
-	voidRep_ = new SQLVoidValue;
+	nullRep_ = new SQLNullValue;
 	// Bump the reference count so it will not be destroyed.
-	voidRep_->refCount_++;
+	nullRep_->refCount_++;
     }
 
-    setRep(voidRep_);
+    setRep(nullRep_);
 }
 
 SQLValue::SQLValue(const SQLValue &v)
@@ -154,9 +154,9 @@ bool SQLValue::isSameType(const SQLValue &v) const
 }
 
 // Return true if the object is of void type
-bool SQLValue::isVoid() const 
+bool SQLValue::isNull() const 
 {
-    return voidRep_ == 0 || rep_->isSameType(voidRep_);
+    return nullRep_ == 0 || rep_->isSameType(nullRep_);
 }
 
 // Return true if the object is of void type
@@ -252,44 +252,45 @@ SQLValueRep * SQLValueRep::illegalOperation(char op)
 
 
 // Derived variable classes
-bool SQLVoidValue::fromString(const std::string &)
+bool SQLNullValue::fromString(const std::string &)
 {
     return true;
 }
 
-void SQLVoidValue::toString(std::string &s)
+void SQLNullValue::toString(std::string &s)
 {
-    s = "";
+    s = "<null>";
 }
 
-const char * SQLVoidValue::typeAsString() const
+const char * SQLNullValue::typeAsString() const
 {
-    return "Void";
+    return "Null";
 }
 
-SQLValueRep * SQLVoidValue::clone() const
+SQLValueRep * SQLNullValue::clone() const
 {
-    SQLVoidValue *v = new SQLVoidValue;
+    SQLNullValue *v = new SQLNullValue;
 
     return v;
 }
 
-int SQLVoidValue::compare(SQLValueRep *) const
+int SQLNullValue::compare(SQLValueRep *) const
 {
-    // Void values always compare as unequal
+    // Null values always compare as unequal even when compared to other null
+    // as null implies unknown.
     return 1;
 }
 
 // Perform the given arithmetic operation and return the result
-SQLValueRep * SQLVoidValue::binaryOperation(SQLValueRep *v2, char op)
+SQLValueRep * SQLNullValue::binaryOperation(SQLValueRep *v2, char op)
 {
-    // Any operation applied to a void will yield a void
+    // Any operation applied to a null will yield a nulll
     return this;
 }
 
-SQLValueRep * SQLVoidValue::unaryOperation(char op)
+SQLValueRep * SQLNullValue::unaryOperation(char op)
 {
-    // Any operation applied to a void will yield a void
+    // Any operation applied to a null will yield a null
     return this;
 }
 

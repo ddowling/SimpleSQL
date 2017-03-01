@@ -151,8 +151,8 @@ bool SQLBinaryExpression::evaluateSiblings(SQLContext &context,
 {
     v1 = expr1->evaluate(context);
     // Exception should just return.
-    if (v1.isException() || v1.isVoid())
-	return false;
+    if (v1.isException() || v1.isNull())
+        return false;
 
     // Performance optimisation to aim to only do the type conversion once
     // for things like SQLDateTimeValue
@@ -162,7 +162,7 @@ bool SQLBinaryExpression::evaluateSiblings(SQLContext &context,
     else
         v2 = expr2->evaluate(context);
 
-    if (v2.isException() || v2.isVoid())
+    if (v2.isException() || v2.isNull())
     {
 	v1 = v2;
 	return false;
@@ -298,11 +298,11 @@ SQLValue SQLAndExpression::evaluate(SQLContext &context)
 
     // Shortcut false return. Don't shortcut on void as we want this to
     // walk the entire expression tree.
-    if (!v1.isVoid() && !v1.asBoolean())
+    if (!v1.isNull() && !v1.asBoolean())
 	return v1;
 
     SQLValue v2 = expr2->evaluate(context);
-    if (!v2.asBoolean() || v2.isVoid())
+    if (!v2.asBoolean() || v2.isNull())
 	return v2;
     else
 	return v1;
@@ -325,7 +325,7 @@ SQLValue SQLOrExpression::evaluate(SQLContext &context)
 	return v1;
 
     SQLValue v2 = expr2->evaluate(context);
-    if (v2.asBoolean() || v2.isVoid())
+    if (v2.asBoolean() || v2.isNull())
 	return v2;
     else
 	return v1;
@@ -384,7 +384,7 @@ SQLValue SQLNotExpression::evaluate(SQLContext &context)
 {
     SQLValue v = expr->evaluate(context);
     // Void or exception should just return.
-    if (v.isVoid() || v.isException())
+    if (v.isNull() || v.isException())
 	return v;
 
     return v.asBoolean() ? SQLFalseValue : SQLTrueValue;
@@ -425,10 +425,10 @@ SQLValue SQLInExpression::evaluate(SQLContext &context)
 {
     SQLValue v1 = expr->evaluate(context);
     // Exception should just return.
-    if (v1.isException() || v1.isVoid())
+    if (v1.isException() || v1.isNull())
 	return v1;
 
-    bool got_void = false;
+    bool got_null = false;
 
     for (int i = 0; i < list->numExpressions(); i++)
     {
@@ -438,9 +438,9 @@ SQLValue SQLInExpression::evaluate(SQLContext &context)
 	if (v2.isException())
 	    return v2;
 
-        if (v2.isVoid())
+        if (v2.isNull())
         {
-            got_void = true;
+            got_null = true;
             continue;
         }
 
@@ -453,7 +453,7 @@ SQLValue SQLInExpression::evaluate(SQLContext &context)
 	    return SQLTrueValue;
     }
 
-    if (got_void)
+    if (got_null)
         return SQLValue();
     else
         return SQLFalseValue;
@@ -603,7 +603,7 @@ SQLValue SQLNullExpression::evaluate(SQLContext &context)
     if (v.isException())
 	return v;
 
-    return v.isVoid() ? SQLTrueValue : SQLFalseValue;
+    return v.isNull() ? SQLTrueValue : SQLFalseValue;
 }
 
 const char * SQLNullExpression::shortName() const
