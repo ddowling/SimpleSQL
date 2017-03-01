@@ -7,3 +7,4 @@ operation_test
 performance_test
 query_test
 ip_test
+constraint_test

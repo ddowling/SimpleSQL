@@ -297,6 +297,27 @@ int main()
     assert(!o8->evaluate(c).isVoid());
     f(o8);
 
+    cout << "Exclusive or test" << endl;
+    SQLXorExpression *x1 = new SQLXorExpression(fe, fe);
+    cout << x1->asString() << " gives " << x1->evaluate(c).asString() << endl;
+    assert(x1->evaluate(c).asBoolean() == FALSE);
+    f(x1);
+
+    SQLXorExpression *x2 = new SQLXorExpression(te, fe);
+    cout << x2->asString() << " gives " << x2->evaluate(c).asString() << endl;
+    assert(x2->evaluate(c).asBoolean() == TRUE);
+    f(x2);
+
+    SQLXorExpression *x3 = new SQLXorExpression(fe, te);
+    cout << x3->asString() << " gives " << x3->evaluate(c).asString() << endl;
+    assert(x3->evaluate(c).asBoolean() == TRUE);
+    f(x3);
+
+    SQLXorExpression *x4 = new SQLXorExpression(te, te);
+    cout << x4->asString() << " gives " << x4->evaluate(c).asString() << endl;
+    assert(x4->evaluate(c).asBoolean() == FALSE);
+    f(x4);
+
     cout << "Not test" << endl;
     SQLNotExpression *not1 = new SQLNotExpression(te);
     cout << not1->asString() << " gives " << not1->evaluate(c).asString()

@@ -53,3 +53,10 @@ target_link_libraries(ip_test
     SimpleSQL
 )
 add_test(ip_test ip_test)
+
+add_executable(constraint_test constraint_test.cpp)
+target_link_libraries(constraint_test
+    SimpleSQL
+)
+add_test(constraint_test constraint_test)
+

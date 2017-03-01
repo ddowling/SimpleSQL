@@ -336,6 +336,29 @@ const char * SQLOrExpression::shortName() const
     return "Or";
 }
 
+SQLValue SQLXorExpression::evaluate(SQLContext &context)
+{
+    SQLValue v1 = expr1->evaluate(context);
+    SQLValue v2 = expr2->evaluate(context);
+    // Exception should just return.
+    if (v1.isException())
+       return v1;
+    if (v2.isException())
+       return v2;
+
+    bool b1 = v1.asBoolean();
+    bool b2 = v2.asBoolean();
+    if (b1 ^ b2)
+       return SQLTrueValue;
+    else
+       return SQLFalseValue;
+}
+
+const char * SQLXorExpression::shortName() const
+{
+    return "Xor";
+}
+
 SQLValue SQLOperationExpression::evaluate(SQLContext &context)
 {
     SQLValue v1, v2;

@@ -230,6 +230,20 @@ public:
 };
 
 /**
+  * 'XOR' SQLExpression.
+  */
+class SQLXorExpression
+: public SQLBinaryExpression
+{
+public:
+    SQLXorExpression(SQLExpression *expr1, SQLExpression *expr2)
+        : SQLBinaryExpression(expr1, expr2) { ; }
+    virtual const char *shortName() const;
+
+    SQLValue evaluate(SQLContext &context);
+};
+
+/**
  * Operation SQLExpression.
  */
 class SQLOperationExpression

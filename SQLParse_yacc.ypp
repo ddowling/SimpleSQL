@@ -72,7 +72,7 @@ void SimpleSQL_error(const char *err);
 %type <expression>	expression
 %type <list>		expression_list expressions
 
-%left			OR_T
+%left			OR_T XOR_T IMPLIES_T
 %left			AND_T
 %left			LE_T GE_T '<' '>' EQ_T NE_T
 %left			'+' '-'
@@ -119,6 +119,17 @@ expression	: expression IN_T expression_list
 			            new SQLLessThanExpression($1, $4),
 			            new SQLGreaterThanExpression($1, $6));
 			}
+                | expression XOR_T expression
+                        {
+                            $$ = new SQLXorExpression($1, $3);
+                        }
+                | expression IMPLIES_T expression
+                        {
+                            // Logical implication A implies B. Not exactly
+                            // standard SQL syntax but a nice means to express
+                            // constraints
+                            $$ = new SQLOrExpression(new SQLNotExpression($1), $3);
+                        }
 		| expression EQ_T ANY_T expression_list
 			{
 			    $$ = new SQLInExpression($1, $4);

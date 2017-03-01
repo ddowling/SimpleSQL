@@ -116,6 +116,8 @@ static void update_lloc()
 "in"            return(IN_T);
 "is"            return(IS_T);
 "null"		return(NULL_T);
+"implies"	return(IMPLIES_T);
+"xor"		return(XOR_T);
 
 -?[0-9]+	{
     yylval.expression =
